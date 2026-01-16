@@ -18,6 +18,7 @@ namespace MarketEntity.Validators
             if (base64.EndsWith("==")) padding = 2;
             else if (base64.EndsWith("=")) padding = 1;
 
+
             // Base64 uzunluğundan byte hesap
             long bytes = (base64.Length * 3L) / 4L - padding;
             return bytes;

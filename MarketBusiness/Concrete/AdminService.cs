@@ -431,7 +431,7 @@ namespace MarketBusiness.Concrete
             catch (Exception ex)
             {
                 response.Code = "400";
-                response.Errors.Add(ex.Message);
+                response.Errors.Add(ex.InnerException?.Message ?? ex.Message);
                 return response;
             }
         }

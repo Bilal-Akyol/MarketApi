@@ -117,7 +117,7 @@ namespace MarketApi.Controllers
 
         [SwaggerOperation("Ürün güncelleme")]
         [HttpPost]
-        [Route("AddUpdate")]
+        [Route("ProductAddUpdate")]
         public ProductUpdateResponse UpdateProduct(ProductUpdateRequest request)
         {
             var identity = User.Identity as ClaimsIdentity;
