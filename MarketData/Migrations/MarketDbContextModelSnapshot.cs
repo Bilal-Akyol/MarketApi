@@ -163,6 +163,63 @@ namespace MarketData.Migrations
                     b.ToTable("product_image");
                 });
 
+            modelBuilder.Entity("MarketEntity.Models.Slider", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date");
+
+                    b.Property<DateTime>("DeletedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("deleted_date");
+
+                    b.Property<string>("ImageBase64")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("image_base64");
+
+                    b.Property<string>("ImageContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("image_content_type");
+
+                    b.Property<long>("ImageSizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("image_size_bytes");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("modified_date");
+
+                    b.Property<string>("RedirectUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("redirect_url");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("sliders");
+                });
+
             modelBuilder.Entity("MarketEntity.Models.User", b =>
                 {
                     b.Property<long>("Id")

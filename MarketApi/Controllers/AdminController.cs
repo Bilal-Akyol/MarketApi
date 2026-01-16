@@ -142,6 +142,67 @@ namespace MarketApi.Controllers
             return _adminService.UpdateProduct(request);
         }
 
+        [SwaggerOperation(Summary ="Slider Ekleme")]
+        [HttpPost]
+        [Route("CreateSlider")]
+        public SliderCreateResponse SliderCreate(SliderCreateRequest request) 
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            if(identity != null) 
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+                if(roleId != 2) 
+                {
+                    var response = new SliderCreateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                    return response;
+                }
+            }
+
+            return _adminService.SliderCreate(request);
+
+        }
+
+        [SwaggerOperation(Summary ="Slider Güncelleme")]
+        [HttpPost]
+        [Route("UpdateSlider")]
+        public SliderUpdateResponse SliderUpdate(SliderUpdateRequest request) 
+        {
+            var identity = User.Identity as ClaimsIdentity;
+
+            if(identity !=null)
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+
+                if (roleId != 2) 
+                {
+                    var response = new SliderUpdateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                    return response;
+                }
+
+            }
+            return _adminService.SliderUpdate(request);
+        }
+
+
+        [AllowAnonymous]
+        [SwaggerOperation(Summary ="Aktif Sliderı Listeleme")]
+        [HttpGet]
+        [Route("GetActiveSliders")]
+        public SliderListResponse GetAllActiveSlider()
+        {
+            return _adminService.GetAllActiveSlider();
+        }
+
+
 
 
 

@@ -14,6 +14,9 @@ namespace MarketBusiness.Abstract
         ProductCreateResponse CreateProduct(ProductCreateRequest request);
         ProductListResponse GetAll();
         ProductUpdateResponse UpdateProduct(ProductUpdateRequest request);
+        SliderCreateResponse SliderCreate(SliderCreateRequest request);
+        SliderListResponse GetAllActiveSlider();
+        SliderUpdateResponse SliderUpdate(SliderUpdateRequest request);
         
 
 

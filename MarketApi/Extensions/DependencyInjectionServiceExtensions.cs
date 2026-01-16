@@ -24,6 +24,8 @@ namespace MarketApi.Extensions
             services.AddScoped<ICategoriesRepository, EfCategoriesRepository>();
             services.AddScoped<IProductRepository, EfProductRepository>();
             services.AddScoped<IProductImageRepository, EfProductImageRepository>();
+            services.AddScoped<ISliderRepository, EfSliderRepository>();
+
 
 
             services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();

@@ -17,16 +17,20 @@ namespace MarketBusiness.Concrete
         private readonly ICategoriesRepository _categoryRepository;
         private readonly IProductRepository _productRepository;
         private readonly IProductImageRepository _productImageRepository;
+        private readonly ISliderRepository _sliderRepository;
 
         public AdminService(IUserRepository userRepository,
             ICategoriesRepository categoriesRepository,
             IProductRepository productRepository,
-            IProductImageRepository productImageRepository)
+            IProductImageRepository productImageRepository,
+            ISliderRepository sliderRepository
+            )
         {
             _userRepository = userRepository;
             _categoryRepository = categoriesRepository;
             _productRepository = productRepository;
             _productImageRepository = productImageRepository;
+            _sliderRepository = sliderRepository;
             
         }
 
@@ -282,6 +286,149 @@ namespace MarketBusiness.Concrete
 
             }
             catch(Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+
+
+        public SliderCreateResponse SliderCreate(SliderCreateRequest request)
+        {
+            var response = new SliderCreateResponse();
+
+            try
+            {
+                var validator = new SliderCreateValidator();
+                var result = validator.Validate(request);
+
+                if(!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Errors.Add("Doğrulama Hatası");
+                    return response;
+
+                }
+
+                var slider = new Slider
+                {
+                    Title = request.Title,
+                    RedirectUrl = request.RedirectUrl,
+                    ImageBase64 = request.ImageBase64,
+                    ImageContentType = request.ImageContentType,
+                    ImageSizeBytes=Base64SizeHelper.GetBytesFromBase64(request.ImageBase64),
+                    IsActive=request.IsActive
+                };
+
+                var created = _sliderRepository.Add(slider);
+
+                response.Code = "200";
+                response.Message = "Slider Eklendi";
+                response.SliderId = created.Id;
+                return response;
+
+            }
+
+            catch(Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public SliderListResponse GetAllActiveSlider() 
+        {
+            var response = new SliderListResponse();
+            try 
+            {
+                var sliders = _sliderRepository.GetList(x => x.IsActive)
+                    .ToList();
+                foreach (var s in sliders)
+                {
+                    response.Sliders.Add(new SliderListItem
+                    {
+                        SliderId=s.Id,
+                        Title = s.Title??"",
+                        RedirectUrl=s.RedirectUrl,
+                        ImageBase64=s.ImageBase64,
+                        ImageContentType=s.ImageContentType
+
+                    });
+                }
+
+                response.Code = "200";
+                response.Message = "Sliderlar Listelendi";
+                return response;
+
+            }
+            catch(Exception ex) 
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+
+        }
+
+
+
+
+
+        public SliderUpdateResponse SliderUpdate(SliderUpdateRequest request)
+        {
+            var response = new SliderUpdateResponse();
+
+            try
+            {
+                // Validation
+                var validator = new SliderUpdateValidator();
+                var result = validator.Validate(request);
+
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Errors.Add("Doğrulama hatası");
+                    return response;
+                }
+
+                // Slider var mı
+                var slider = _sliderRepository.Get(x => x.Id == request.SliderId);
+                if (slider == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Slider bulunamadı.");
+                    return response;
+                }
+
+                //Alanları güncelle
+                slider.Title = request.Title;
+                slider.RedirectUrl = request.RedirectUrl;
+                slider.IsActive = request.IsActive;
+
+                //Resim geldiyse güncelle gelmediyse eskisi kalsın
+                if (!string.IsNullOrWhiteSpace(request.ImageBase64))
+                {
+                    slider.ImageBase64 = request.ImageBase64!;
+                    slider.ImageContentType = request.ImageContentType!;
+                    slider.ImageSizeBytes = Base64SizeHelper.GetBytesFromBase64(request.ImageBase64!);
+                }
+
+                _sliderRepository.Update(slider);
+
+                response.Code = "200";
+                response.Message = "Slider güncellendi";
+                return response;
+            }
+            catch (Exception ex)
             {
                 response.Code = "400";
                 response.Errors.Add(ex.Message);

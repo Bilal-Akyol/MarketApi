@@ -22,5 +22,6 @@ namespace MarketData.Concrete.Ef
         public DbSet<Categories> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Slider> Sliders { get; set; }
     }
 }
