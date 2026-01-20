@@ -12,11 +12,13 @@ namespace MarketBusiness.Abstract
         UserLoginResponse Login(UserLoginRequest request);
         AddCategoryResponse AddCategory(AddCategoryRequest request);
         ProductCreateResponse CreateProduct(ProductCreateRequest request);
-        ProductListResponse GetAll();
+        
         ProductUpdateResponse UpdateProduct(ProductUpdateRequest request);
         SliderCreateResponse SliderCreate(SliderCreateRequest request);
-        SliderListResponse GetAllActiveSlider();
+        
         SliderUpdateResponse SliderUpdate(SliderUpdateRequest request);
+        AboutCreateResponse AboutCreate(AboutCreateRequest request);
+        AboutUpdateResponse AboutUpdate(AboutUpdateRequest request);
         
 
 

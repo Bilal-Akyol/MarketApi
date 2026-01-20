@@ -18,12 +18,14 @@ namespace MarketBusiness.Concrete
         private readonly IProductRepository _productRepository;
         private readonly IProductImageRepository _productImageRepository;
         private readonly ISliderRepository _sliderRepository;
+        private readonly IAboutRepository _aboutRepository;
 
         public AdminService(IUserRepository userRepository,
             ICategoriesRepository categoriesRepository,
             IProductRepository productRepository,
             IProductImageRepository productImageRepository,
-            ISliderRepository sliderRepository
+            ISliderRepository sliderRepository,
+            IAboutRepository aboutRepository
             )
         {
             _userRepository = userRepository;
@@ -31,6 +33,7 @@ namespace MarketBusiness.Concrete
             _productRepository = productRepository;
             _productImageRepository = productImageRepository;
             _sliderRepository = sliderRepository;
+            _aboutRepository = aboutRepository;
             
         }
 
@@ -190,41 +193,7 @@ namespace MarketBusiness.Concrete
         }
 
 
-        public ProductListResponse GetAll()
-        {
-            var response = new ProductListResponse();
-
-            try
-            {
-                var products = _productRepository.GetList();
-
-                foreach (var pr in products)
-                {
-                    // cover foto bul
-                    var cover = _productImageRepository.GetList(x => x.ProductId == pr.Id && x.IsCover)
-                        .FirstOrDefault();
-
-                    response.Products.Add(new ProductListItem
-                    {
-                        ProductId = pr.Id,
-                        Name = pr.Name ?? "",
-                        Price = pr.Price,
-                        CoverBase64 = cover?.Base64,
-                        CoverContentType = cover?.ContentType
-                    });
-                }
-
-                response.Code = "200";
-                response.Message = "Ürünler listelendi";
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Code = "400";
-                response.Errors.Add(ex.Message);
-                return response;
-            }
-        }
+        
 
 
         public ProductUpdateResponse UpdateProduct(ProductUpdateRequest request)
@@ -342,39 +311,7 @@ namespace MarketBusiness.Concrete
             }
         }
 
-        public SliderListResponse GetAllActiveSlider() 
-        {
-            var response = new SliderListResponse();
-            try 
-            {
-                var sliders = _sliderRepository.GetList(x => x.IsActive)
-                    .ToList();
-                foreach (var s in sliders)
-                {
-                    response.Sliders.Add(new SliderListItem
-                    {
-                        SliderId=s.Id,
-                        Title = s.Title??"",
-                        RedirectUrl=s.RedirectUrl,
-                        ImageBase64=s.ImageBase64,
-                        ImageContentType=s.ImageContentType
-
-                    });
-                }
-
-                response.Code = "200";
-                response.Message = "Sliderlar Listelendi";
-                return response;
-
-            }
-            catch(Exception ex) 
-            {
-                response.Code = "400";
-                response.Errors.Add(ex.Message);
-                return response;
-            }
-
-        }
+       
 
 
 
@@ -437,10 +374,119 @@ namespace MarketBusiness.Concrete
         }
 
 
+        public AboutCreateResponse AboutCreate(AboutCreateRequest request)
+        {
+            var response = new AboutCreateResponse();
+            try 
+            {
+                var validator = new AboutCreateValidator();
+                var result = validator.Validate(request);
+                if (!result.IsValid) 
+                {
+                    foreach (var err in result.Errors)
+                    
+                        response.Errors.Add(err.ErrorMessage);
+                        response.Code = "400";
+                        response.Errors.Add("Doğrulama hatası");
+                        return response;
+
+                    
+                }
+                var about = new About
+                {
+                    Title = request.Title,
+                    Content = request.Content,
+
+                    ImageBase64 = request.ImageBase64,
+                    ImageContentType = request.ImageContentType,
+                    ImageSizeBytes = Base64SizeHelper.GetBytesFromBase64(request.ImageBase64),
+
+                    IsActive = request.IsActive
+                };
+                about.CreatedDate = DateTime.Now;
+                var created = _aboutRepository.Add(about);
+
+                response.Code = "200";
+                response.Message = "Hakkımızda eklendi";
+                response.AboutId = created.Id;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
 
 
-        private bool VerifyPassword(string password, string passwordHash)
+        public AboutUpdateResponse AboutUpdate(AboutUpdateRequest request)
+        {
+            var response = new AboutUpdateResponse();
+
+            try
+            {
+                
+                var validator = new AboutUpdateValidator();
+                var result = validator.Validate(request);
+
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Errors.Add("Doğrulama hatası");
+                    return response;
+                }
+
+                //Kayıt var mı
+                var about = _aboutRepository.Get(x => x.Id == request.AboutId);
+                if (about == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Hakkımızda bulunamadı.");
+                    return response;
+                }
+
+                // Alanları güncelle
+                about.Title = request.Title;
+                about.Content = request.Content;
+                about.IsActive = request.IsActive;
+
+                //Resim geldiyse güncelle, gelmediyse eskisi kalsın
+                if (!string.IsNullOrWhiteSpace(request.ImageBase64))
+                {
+                    about.ImageBase64 = request.ImageBase64!;
+                    about.ImageContentType = request.ImageContentType ?? "image/jpeg";
+                    about.ImageSizeBytes = Base64SizeHelper.GetBytesFromBase64(request.ImageBase64!);
+                }
+
+                // BaseEntity
+                about.ModifiedDate = DateTime.Now;
+
+                _aboutRepository.Update(about);
+
+                response.Code = "200";
+                response.Message = "Hakkımızda güncellendi";
+                response.AboutId = about.Id;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+    
+
+
+
+
+
+private bool VerifyPassword(string password, string passwordHash)
         {
             // passwordHash null ise direkt false dön (hata patlamasın)
             if (string.IsNullOrWhiteSpace(passwordHash)) return false;

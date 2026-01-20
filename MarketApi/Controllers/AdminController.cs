@@ -106,17 +106,10 @@ namespace MarketApi.Controllers
 
 
         
-        [SwaggerOperation(Summary = "Ürünleri listele (kapak foto ile)")]
-        [AllowAnonymous]
-        [HttpGet]
-        [Route("GetAll")]
-        public ProductListResponse GetAll()
-        {
-            return _adminService.GetAll();
-        }
+        
 
         [SwaggerOperation("Ürün güncelleme")]
-        [HttpPost]
+        [HttpPut]
         [Route("ProductAddUpdate")]
         public ProductUpdateResponse UpdateProduct(ProductUpdateRequest request)
         {
@@ -151,6 +144,7 @@ namespace MarketApi.Controllers
             if(identity != null) 
             {
                 var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
 
                 var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
                 if(roleId != 2) 
@@ -167,7 +161,7 @@ namespace MarketApi.Controllers
         }
 
         [SwaggerOperation(Summary ="Slider Güncelleme")]
-        [HttpPost]
+        [HttpPut]
         [Route("UpdateSlider")]
         public SliderUpdateResponse SliderUpdate(SliderUpdateRequest request) 
         {
@@ -193,14 +187,56 @@ namespace MarketApi.Controllers
         }
 
 
-        [AllowAnonymous]
-        [SwaggerOperation(Summary ="Aktif Sliderı Listeleme")]
-        [HttpGet]
-        [Route("GetActiveSliders")]
-        public SliderListResponse GetAllActiveSlider()
+        
+
+
+        [SwaggerOperation(Summary ="Hakkımızda Ekleme")]
+        [HttpPost]
+        [Route("CreateAbout")]
+        public AboutCreateResponse AboutCreate(AboutCreateRequest request) 
         {
-            return _adminService.GetAllActiveSlider();
+            var identity = User.Identity as ClaimsIdentity;
+            if(identity != null) 
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+                if(roleId != 2) 
+                {
+                    var response = new AboutCreateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                    return response;
+                }
+            }
+            return _adminService.AboutCreate(request);
         }
+
+
+        [SwaggerOperation(Summary ="Hakkımızda Güncelleme")]
+        [HttpPut]
+        [Route("UpdateAbout")]
+        public AboutUpdateResponse AboutUpdate(AboutUpdateRequest request) 
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            if(identity != null) 
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+
+                if (roleId != 2) 
+                {
+                    var response = new AboutUpdateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                    return response;
+                }
+            }
+            return _adminService.AboutUpdate(request);
+
+        }
+
 
 
 

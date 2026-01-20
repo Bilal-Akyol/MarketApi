@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 
 namespace MarketData.Concrete.Ef
 {
-    public class EfCategoriesRepository:EfEntityRepository<Categories,MarketDbContext>, ICategoriesRepository
+    public class EfAboutRepository:EfEntityRepository<About,MarketDbContext>,IAboutRepository
     {
-
     }
 }

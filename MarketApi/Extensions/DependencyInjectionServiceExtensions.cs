@@ -17,6 +17,7 @@ namespace MarketApi.Extensions
                     .AddFluentValidation();
 
             services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IListService, ListService>();
 
 
 
@@ -25,6 +26,7 @@ namespace MarketApi.Extensions
             services.AddScoped<IProductRepository, EfProductRepository>();
             services.AddScoped<IProductImageRepository, EfProductImageRepository>();
             services.AddScoped<ISliderRepository, EfSliderRepository>();
+            services.AddScoped<IAboutRepository, EfAboutRepository>();
 
 
 
