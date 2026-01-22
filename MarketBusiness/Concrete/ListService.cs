@@ -18,16 +18,22 @@ namespace MarketBusiness.Concrete
         private readonly ISliderRepository _sliderRepository;
         private readonly IProductImageRepository _productImageRepository;
         private readonly ICategoriesRepository _categoriesRepository;
+        private readonly IAboutRepository _aboutRepository;
+        private readonly IContactRepository _contactRepository;
 
         public ListService(IProductRepository productRepository,
             ISliderRepository sliderRepository,
             IProductImageRepository productImageRepository,
-            ICategoriesRepository categoriesRepository)
+            ICategoriesRepository categoriesRepository,
+            IAboutRepository aboutRepository,
+            IContactRepository contactRepository)
         {
             _productRepository = productRepository;
             _sliderRepository = sliderRepository;
             _productImageRepository = productImageRepository;
             _categoriesRepository = categoriesRepository;
+            _aboutRepository = aboutRepository;
+            _contactRepository = contactRepository;
         }
 
 
@@ -68,8 +74,36 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
+        public ProductGetByIdResponse GetByIdProduct(ProductGetByIdRequest request)
+        {
+            var response = new ProductGetByIdResponse();
+            if (request.ProductId <= 0)
+            {
+                response.Code = "400";
+                response.Errors.Add("ProductId Zorunludur");
+                return response;
+            }
+            var product = _productRepository.Get(p => p.Id == request.ProductId);
+            var cover = _productImageRepository.GetList(x => x.ProductId == product.Id && x.IsCover)
+                        .FirstOrDefault();
+            if (product == null)
+            {
+                response.Code = "400";
+                response.Errors.Add("Product Bulunamadı");
+                return response;
+            }
+            response.ProductId = product.Id;
+            response.Name = product.Name;
+            response.Price = product.Price;
+            response.CoverBase64 = cover?.Base64;
+            response.CoverContentType = cover?.ContentType;
+            response.Code = "200";
+            response.Message = "Product Getirildi";
+            return response;
 
-       
+        }
+
+
 
 
         public SliderListResponse GetAllActiveSlider()
@@ -105,6 +139,35 @@ namespace MarketBusiness.Concrete
             }
 
         }
+        public AboutListResponse GetAllAbouts() 
+        {
+            var response = new AboutListResponse();
+            try 
+            {
+                var abouts = _aboutRepository.GetList();
+                foreach (var about in abouts)
+                {
+                    response.Abouts.Add(new AboutListItem { 
+                    
+                        Title=about.Title,
+                        Content=about.Content,
+                        ImageBase64=about.ImageBase64,
+                        ImageContentType=about.ImageContentType
+                    });
+                    
+                }
+
+                response.Code = "200";
+                response.Message = "Hakkımızda Listelendi";
+                return response;
+            }
+            catch(Exception ex) 
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
         public CategoryGetAllResponse GetAllCategory()
         {
@@ -135,9 +198,65 @@ namespace MarketBusiness.Concrete
         }
 
 
+        
 
 
+        public CategoryGetByIdResponse GetByIdCategory(CategoryGetByIdRequest request) 
+        {
+            var response = new CategoryGetByIdResponse();
+            if (request.CategoryId <= 0) 
+            {
+                response.Code = "400";
+                response.Errors.Add("CategoryId Zorunludur");
+                return response;
+            }
+            var categories = _categoriesRepository.Get(c => c.Id == request.CategoryId);
+            if(categories == null)
+            {
+                response.Code = "400";
+                response.Errors.Add("Kategori Bulunamadı");
+                return response;
+            }
 
+            response.CategoryId = categories.Id;
+            response.CategoryName = categories.CategoryName;
+            response.Code = "200";
+            response.Message = "Kategori getirildi";
+            return response;
+        }
+
+        public ContactListResponse GetAllContact()
+        {
+            var response = new ContactListResponse();
+            try
+            {
+                var contacts = _contactRepository.GetList();
+                foreach (var contact in contacts)
+                {
+                    response.Contacts.Add(new ContactListItem
+                    {
+
+                        Title = contact.Title,
+                        Content = contact.Content,
+                        Phone = contact.Phone,
+                        Email = contact.Email,
+                        Address = contact.Address,
+                        MapUrl = contact.MapUrl
+
+                    });
+                }
+                response.Code = "200";
+                response.Message = "İletişim Bilgileri Listelendi";
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
 
     }

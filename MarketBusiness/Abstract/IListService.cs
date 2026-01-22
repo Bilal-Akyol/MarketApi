@@ -10,8 +10,27 @@ namespace MarketBusiness.Abstract
     public interface IListService
     {
         ProductListResponse GetAll();
+        ProductGetByIdResponse GetByIdProduct(ProductGetByIdRequest request);
         SliderListResponse GetAllActiveSlider();
         CategoryGetAllResponse GetAllCategory();
+        CategoryGetByIdResponse GetByIdCategory(CategoryGetByIdRequest request);
+        AboutListResponse GetAllAbouts();
+        ContactListResponse GetAllContact();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
     }

@@ -27,6 +27,7 @@ namespace MarketApi.Extensions
             services.AddScoped<IProductImageRepository, EfProductImageRepository>();
             services.AddScoped<ISliderRepository, EfSliderRepository>();
             services.AddScoped<IAboutRepository, EfAboutRepository>();
+            services.AddScoped<IContactRepository, EfContactRepository>();
 
 
 

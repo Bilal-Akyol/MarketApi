@@ -19,6 +19,11 @@ namespace MarketBusiness.Abstract
         SliderUpdateResponse SliderUpdate(SliderUpdateRequest request);
         AboutCreateResponse AboutCreate(AboutCreateRequest request);
         AboutUpdateResponse AboutUpdate(AboutUpdateRequest request);
+        ContactCreateResponse ContactCreate(ContactCreateRequest request);
+        ContactUpdateResponse ContactUpdate(ContactUpdateRequest request);
+
+
+
         
 
 

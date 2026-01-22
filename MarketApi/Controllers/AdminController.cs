@@ -76,6 +76,7 @@ namespace MarketApi.Controllers
             return _adminService.AddCategory(request);
         }
 
+
         [SwaggerOperation("Ürün ekleme")]
         [HttpPost]
         [Route("AddProduct")]
@@ -134,6 +135,7 @@ namespace MarketApi.Controllers
 
             return _adminService.UpdateProduct(request);
         }
+
 
         [SwaggerOperation(Summary ="Slider Ekleme")]
         [HttpPost]
@@ -213,6 +215,8 @@ namespace MarketApi.Controllers
         }
 
 
+        
+
         [SwaggerOperation(Summary ="Hakkımızda Güncelleme")]
         [HttpPut]
         [Route("UpdateAbout")]
@@ -238,6 +242,54 @@ namespace MarketApi.Controllers
         }
 
 
+
+
+        [SwaggerOperation(Summary = "İletişim Ekleme")]
+        [HttpPost]
+        [Route("CreateContact")]
+        public ContactCreateResponse ContactCreate(ContactCreateRequest request)
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+                if (roleId != 2)
+                {
+                    var response = new ContactCreateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                    return response;
+                }
+            }
+            return _adminService.ContactCreate(request);
+        }
+
+
+        [SwaggerOperation(Summary = "İletişim Bilgilerini Güncelleme")]
+        [HttpPut]
+        [Route("ContactUpdate")]
+        public ContactUpdateResponse ContactUpdate(ContactUpdateRequest request)
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+                if (roleId != 2)
+                {
+                    ContactUpdateResponse response = new ContactUpdateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                    return response;
+
+                }
+            }
+            return _adminService.ContactUpdate(request);
+        }
 
 
 

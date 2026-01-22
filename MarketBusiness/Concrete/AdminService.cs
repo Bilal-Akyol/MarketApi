@@ -19,13 +19,15 @@ namespace MarketBusiness.Concrete
         private readonly IProductImageRepository _productImageRepository;
         private readonly ISliderRepository _sliderRepository;
         private readonly IAboutRepository _aboutRepository;
+        private readonly IContactRepository _contactRepository;
 
         public AdminService(IUserRepository userRepository,
             ICategoriesRepository categoriesRepository,
             IProductRepository productRepository,
             IProductImageRepository productImageRepository,
             ISliderRepository sliderRepository,
-            IAboutRepository aboutRepository
+            IAboutRepository aboutRepository,
+            IContactRepository contactRepository
             )
         {
             _userRepository = userRepository;
@@ -34,6 +36,7 @@ namespace MarketBusiness.Concrete
             _productImageRepository = productImageRepository;
             _sliderRepository = sliderRepository;
             _aboutRepository = aboutRepository;
+            _contactRepository = contactRepository;
             
         }
 
@@ -480,13 +483,111 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
-    
+
+
+
+        public ContactCreateResponse ContactCreate(ContactCreateRequest request) 
+        {
+            var response = new ContactCreateResponse();
+            try 
+            {
+                var validator = new ContactCreateValidator();
+                var result = validator.Validate(request);
+                if (!result.IsValid) 
+                {
+                    foreach (var err in result.Errors)
+                    
+                        response.Errors.Add(err.ErrorMessage);
+                        response.Code = "400";
+                        response.Errors.Add("Doğrulama Hatası");
+                        return response;
+                        
+                    
+                }
+                var contact = new Contact
+                {
+                    Title = request.Title,
+                    Content = request.Content,
+                    Phone = request.Phone,
+                    Email = request.Email,
+                    Address=request.Address,
+                    MapUrl = request.MapUrl,
+                    IsActive = request.IsActive
+
+                };
+                contact.CreatedDate = DateTime.Now;
+                var created = _contactRepository.Add(contact);
+                response.Code = "200";
+                response.Message = "İletişim bilgileri eklendi";
+                response.ContactId = created.Id;
+                return response;
+                
+            }
+            catch(Exception err)
+            {
+                response.Code = "400";
+                response.Errors.Add(err.Message);
+                return response;
+            }
+
+        }
+
+
+
+        public ContactUpdateResponse ContactUpdate(ContactUpdateRequest request)
+        {
+            var response = new ContactUpdateResponse();
+            try
+            {
+                var valiidator = new ContactUpdateValidator();
+                var result = valiidator.Validate(request);
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+                    response.Code = "400";
+                    response.Errors.Add("Doğrulama Hatası");
+                    return response;
+                }
+                var contact = _contactRepository.Get(c => c.Id == request.ContactId);
+                if (contact == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("İletişim Bilgileri Bulunamadı");
+                    return response;
+                }
+
+                contact.Title = request.Title;
+                contact.Content = request.Content;
+                contact.Phone = request.Phone;
+                contact.Email = request.Email;
+                contact.Address = request.Address;
+                contact.MapUrl = request.MapUrl;
+
+                contact.ModifiedDate = DateTime.Now;
+                _contactRepository.Update(contact);
+
+
+                response.Code = "200";
+                response.Message = "İletişim bilgileri güncellendi";
+                response.ContactId = contact.Id;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
 
 
 
 
-private bool VerifyPassword(string password, string passwordHash)
+
+        private bool VerifyPassword(string password, string passwordHash)
         {
             // passwordHash null ise direkt false dön (hata patlamasın)
             if (string.IsNullOrWhiteSpace(passwordHash)) return false;

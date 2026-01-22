@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace MarketEntity.DTO
 {
-    public class AboutGetResponse : BaseApiResponse
+    public class ProductGetByIdRequest:BaseApiRequest
     {
-        public string Title { get; set; }
-        public string Content { get; set; }
+        public long ProductId { get; set; }
     }
-
 }

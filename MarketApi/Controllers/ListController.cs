@@ -32,6 +32,18 @@ namespace MarketApi.Controllers
             return _listService.GetAll();
         }
 
+
+        [SwaggerOperation(Summary = "İd göre Ürün listele")]
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("GetByIdProduct")]
+        public ProductGetByIdResponse GetByIdProduct(ProductGetByIdRequest request)
+        {
+            return _listService.GetByIdProduct(request);
+        }
+
+
+
         [AllowAnonymous]
         [SwaggerOperation(Summary = "Aktif Sliderı Listeleme")]
         [HttpGet]
@@ -40,6 +52,10 @@ namespace MarketApi.Controllers
         {
             return _listService.GetAllActiveSlider();
         }
+
+
+
+
         [SwaggerOperation(Summary = "Kaetegorileri listele")]
         [AllowAnonymous]
         [HttpGet]
@@ -47,6 +63,37 @@ namespace MarketApi.Controllers
         public CategoryGetAllResponse GetAllCategory()
         {
             return _listService.GetAllCategory();
+        }
+
+
+
+        [SwaggerOperation(Summary ="İd göre kategoriyi listele")]
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("GetByIdCategor")]
+        public CategoryGetByIdResponse GetByIdCategory(CategoryGetByIdRequest request) 
+        {
+            return _listService.GetByIdCategory(request);
+        }
+        
+
+
+        [SwaggerOperation(Summary ="Hakkımzda listele")]
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("GetAllAbout")]
+        public AboutListResponse GetAllAbouts()
+        {
+            return _listService.GetAllAbouts();
+        }
+
+        [SwaggerOperation(Summary = "İletişim Bilgilerini listele")]
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("GetAllContact")]
+        public ContactListResponse GetAllContact()
+        {
+            return _listService.GetAllContact();
         }
 
     }
