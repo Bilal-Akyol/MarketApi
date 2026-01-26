@@ -21,10 +21,13 @@ namespace MarketBusiness.Abstract
         AboutUpdateResponse AboutUpdate(AboutUpdateRequest request);
         ContactCreateResponse ContactCreate(ContactCreateRequest request);
         ContactUpdateResponse ContactUpdate(ContactUpdateRequest request);
+        DeleteProductResponse DeleteProduct(DeleteProductRequest request);
+        DeleteCategoryResponse DeleteCategory(DeleteCategoryRequest request);
+        DeleteSliderResponse DeleteSlider(DeleteSliderRequest request);
 
 
 
-        
+
 
 
 

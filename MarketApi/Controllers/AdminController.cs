@@ -314,5 +314,85 @@ namespace MarketApi.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
 
         }
+        [SwaggerOperation(Summary = "Ürün Silme")]
+        [HttpDelete]
+        [Route("DeleteProduct")]
+        public DeleteProductResponse DeleteProduct(long productId)
+        {
+            var request = new DeleteProductRequest();
+
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+                if (roleId != 2)
+                {
+                    var resp = new DeleteProductResponse();
+                    resp.Code = "400";
+                    resp.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                    return resp;
+                }
+            }
+
+            request.ProductId = productId;
+            return _adminService.DeleteProduct(request);
+        }
+
+        [SwaggerOperation(Summary = "Kategori Silme")]
+        [HttpDelete]
+        [Route("DeleteCategory")]
+        public DeleteCategoryResponse DeleteCategory(long categoryId)
+        {
+            var request = new DeleteCategoryRequest();
+
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+                if (roleId != 2)
+                {
+                    var resp = new DeleteCategoryResponse();
+                    resp.Code = "400";
+                    resp.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                    return resp;
+                }
+            }
+
+            request.CategoryId = categoryId;
+            return _adminService.DeleteCategory(request);
+        }
+
+        [SwaggerOperation(Summary = "Slider Silme")]
+        [HttpDelete]
+        [Route("DeleteSlider")]
+        public DeleteSliderResponse DeleteSlider(long sliderId)
+        {
+            var request = new DeleteSliderRequest();
+
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                request.UserId = userId;
+
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+                if (roleId != 2)
+                {
+                    var resp = new DeleteSliderResponse();
+                    resp.Code = "400";
+                    resp.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                    return resp;
+                }
+            }
+
+            request.SliderId = sliderId;
+            return _adminService.DeleteSlider(request);
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MarketBusiness.Abstract;
 using MarketData.Abstract;
+using MarketData.Concrete.Ef;
 using MarketEntity.DTO;
 using MarketEntity.Models;
 using MarketEntity.Validators;
@@ -585,14 +586,118 @@ namespace MarketBusiness.Concrete
 
 
 
+        public DeleteProductResponse DeleteProduct(DeleteProductRequest request)
+        {
+            var response = new DeleteProductResponse();
+            try
+            {
+                var product = _productRepository.Get(x => x.Id == request.ProductId);
+                if (product == null)
+                {
+                    response.Code = "200";
+                    response.Message = "Ürün bulunamadı.";
+                    return response;
+                }
+
+                // Ürüne ait resimleri sil
+                var images = _productImageRepository.GetList(x => x.ProductId == product.Id);
+                if (images != null && images.Any())
+                {
+                    foreach (var img in images)
+                        _productImageRepository.Delete(img);
+                }
+
+                _productRepository.Delete(product);
+
+                response.Code = "200";
+                response.Message = "Ürün silme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public DeleteCategoryResponse DeleteCategory(DeleteCategoryRequest request)
+        {
+            var response = new DeleteCategoryResponse();
+            try
+            {
+                var category = _categoryRepository.Get(x => x.Id == request.CategoryId);
+
+                if (category == null)
+                {
+                    response.Code = "200";
+                    response.Message = "Kategori bulunamadı.";
+                    return response;
+                }
+
+                // Bu kategoriye bağlı ürün var mı?
+                var anyProduct = _productRepository.Get(x => x.CategoryId == category.Id);
+                if (anyProduct != null)
+                {
+                    response.Code = "400";
+                    response.Message = "Bu kategoriye bağlı ürünler bulunduğundan silme başarısız. Kategoriyi pasife almayı deneyiniz.";
+                    return response;
+                }
+
+                _categoryRepository.Delete(category);
+
+                response.Code = "200";
+                response.Message = "Kategori silme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public DeleteSliderResponse DeleteSlider(DeleteSliderRequest request)
+        {
+            var response = new DeleteSliderResponse();
+            try
+            {
+                var slider = _sliderRepository.Get(x => x.Id == request.SliderId);
+                if (slider == null)
+                {
+                    response.Code = "200";
+                    response.Message = "Slider bulunamadı.";
+                    return response;
+                }
+
+                _sliderRepository.Delete(slider);
+
+                response.Code = "200";
+                response.Message = "Slider silme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+
+
+
 
 
         private bool VerifyPassword(string password, string passwordHash)
         {
-            // passwordHash null ise direkt false dön (hata patlamasın)
+            // passwordHash null ise direkt false dön
             if (string.IsNullOrWhiteSpace(passwordHash)) return false;
             return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
+
+
 
         
     }
