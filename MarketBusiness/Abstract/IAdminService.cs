@@ -10,20 +10,35 @@ namespace MarketBusiness.Abstract
     public interface IAdminService
     {
         UserLoginResponse Login(UserLoginRequest request);
+
+
         AddCategoryResponse AddCategory(AddCategoryRequest request);
+
+
         ProductCreateResponse CreateProduct(ProductCreateRequest request);
-        
         ProductUpdateResponse UpdateProduct(ProductUpdateRequest request);
+
+
         SliderCreateResponse SliderCreate(SliderCreateRequest request);
-        
         SliderUpdateResponse SliderUpdate(SliderUpdateRequest request);
+
+
         AboutCreateResponse AboutCreate(AboutCreateRequest request);
         AboutUpdateResponse AboutUpdate(AboutUpdateRequest request);
+
+
         ContactCreateResponse ContactCreate(ContactCreateRequest request);
         ContactUpdateResponse ContactUpdate(ContactUpdateRequest request);
+
+
         DeleteProductResponse DeleteProduct(DeleteProductRequest request);
         DeleteCategoryResponse DeleteCategory(DeleteCategoryRequest request);
         DeleteSliderResponse DeleteSlider(DeleteSliderRequest request);
+
+
+        LogoCreateResponse CreateLogo(LogoCreateRequest request);
+        LogoUpdateResponse UpdateLogo(LogoUpdateRequest request);
+        DeleteLogoResponse DeleteLogo(DeleteLogoRequest request);
 
 
 

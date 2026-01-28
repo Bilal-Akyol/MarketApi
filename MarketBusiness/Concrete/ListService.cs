@@ -20,13 +20,15 @@ namespace MarketBusiness.Concrete
         private readonly ICategoriesRepository _categoriesRepository;
         private readonly IAboutRepository _aboutRepository;
         private readonly IContactRepository _contactRepository;
+        private readonly ILogoRepository _logoRepository;
 
         public ListService(IProductRepository productRepository,
             ISliderRepository sliderRepository,
             IProductImageRepository productImageRepository,
             ICategoriesRepository categoriesRepository,
             IAboutRepository aboutRepository,
-            IContactRepository contactRepository)
+            IContactRepository contactRepository,
+            ILogoRepository logoRepository)
         {
             _productRepository = productRepository;
             _sliderRepository = sliderRepository;
@@ -34,6 +36,7 @@ namespace MarketBusiness.Concrete
             _categoriesRepository = categoriesRepository;
             _aboutRepository = aboutRepository;
             _contactRepository = contactRepository;
+            _logoRepository = logoRepository;
         }
 
 
@@ -258,6 +261,38 @@ namespace MarketBusiness.Concrete
             }
         }
 
+
+        public LogoListResponse GetLogos()
+        {
+            var response = new LogoListResponse();
+
+            try
+            {
+                var logos = _logoRepository.GetList(x => x.Status == true);
+
+                foreach (var logo in logos)
+                {
+                    response.Logos.Add(new LogoListItem
+                    {
+                        LogoId = logo.Id,
+                        Title = logo.Title,
+                        ImageBase64 = logo.ImageBase64,
+                        ImageContentType = logo.ImageContentType,
+                        IsActive = logo.IsActive
+                    });
+                }
+
+                response.Code = "200";
+                response.Message = "Logo listeleme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
     }
 }

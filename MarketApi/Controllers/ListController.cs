@@ -96,5 +96,14 @@ namespace MarketApi.Controllers
             return _listService.GetAllContact();
         }
 
+        [SwaggerOperation(Summary ="Logoyu Listele")]
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("GetLogos")]
+        public LogoListResponse GetLogos()
+        {
+            return _listService.GetLogos();
+        }
+
     }
 }

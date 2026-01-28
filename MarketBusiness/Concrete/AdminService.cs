@@ -21,6 +21,7 @@ namespace MarketBusiness.Concrete
         private readonly ISliderRepository _sliderRepository;
         private readonly IAboutRepository _aboutRepository;
         private readonly IContactRepository _contactRepository;
+        private readonly ILogoRepository _logoRepository;
 
         public AdminService(IUserRepository userRepository,
             ICategoriesRepository categoriesRepository,
@@ -28,7 +29,8 @@ namespace MarketBusiness.Concrete
             IProductImageRepository productImageRepository,
             ISliderRepository sliderRepository,
             IAboutRepository aboutRepository,
-            IContactRepository contactRepository
+            IContactRepository contactRepository,
+            ILogoRepository logoRepository
             )
         {
             _userRepository = userRepository;
@@ -38,6 +40,7 @@ namespace MarketBusiness.Concrete
             _sliderRepository = sliderRepository;
             _aboutRepository = aboutRepository;
             _contactRepository = contactRepository;
+            _logoRepository = logoRepository;
             
         }
 
@@ -675,6 +678,137 @@ namespace MarketBusiness.Concrete
 
                 response.Code = "200";
                 response.Message = "Slider silme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+
+
+
+        public LogoCreateResponse CreateLogo(LogoCreateRequest request)
+        {
+            var response = new LogoCreateResponse();
+
+            try
+            {
+                var validator = new LogoCreateValidator();
+                var result = validator.Validate(request);
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Message = "Doğrulama hatası";
+                    return response;
+                }
+
+                // Tek logo mantığı: varsa pasifleştir 
+                var activeLogos = _logoRepository.GetList(x => x.IsActive == true && x.Status == true);
+                foreach (var l in activeLogos)
+                {
+                    l.IsActive = false;
+                    l.ModifiedDate = DateTime.Now;
+                    _logoRepository.Update(l);
+                }
+
+                var logo = new Logo
+                {
+                    Title = request.Title,
+                    ImageBase64 = request.ImageBase64,
+                    ImageContentType = request.ImageContentType,
+                    ImageSizeBytes = Base64SizeHelper.GetBytesFromBase64(request.ImageBase64),
+                    IsActive = request.IsActive,
+                    Status = true,
+                    CreatedDate = DateTime.Now, 
+                };
+
+                var added = _logoRepository.Add(logo);
+
+                response.LogoId = added.Id;
+                response.Code = "200";
+                response.Message = "Logo ekleme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public LogoUpdateResponse UpdateLogo(LogoUpdateRequest request)
+        {
+            var response = new LogoUpdateResponse();
+
+            try
+            {
+                var validator = new LogoUpdateValidator();
+                var result = validator.Validate(request);
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Message = "Doğrulama hatası";
+                    return response;
+                }
+
+                var logo = _logoRepository.Get(x => x.Id == request.LogoId && x.Status == true);
+                if (logo == null)
+                {
+                    response.Code = "400";
+                    response.Message = "Logo bulunamadı.";
+                    return response;
+                }
+
+                logo.Title = request.Title;
+                logo.ImageBase64 = request.ImageBase64;
+                logo.ImageContentType = request.ImageContentType;
+                logo.IsActive = request.IsActive;
+                logo.ModifiedDate = DateTime.Now;
+
+                _logoRepository.Update(logo);
+
+                response.LogoId = logo.Id;
+                response.Code = "200";
+                response.Message = "Logo güncelleme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public DeleteLogoResponse DeleteLogo(DeleteLogoRequest request)
+        {
+            var response = new DeleteLogoResponse();
+
+            try
+            {
+                var logo = _logoRepository.Get(x => x.Id == request.LogoId && x.Status == true);
+                if (logo == null)
+                {
+                    response.Code = "200";
+                    response.Message = "Logo bulunamadı.";
+                    return response;
+                }
+
+                _logoRepository.Delete(logo);
+
+                response.Code = "200";
+                response.Message = "Logo silme başarılı.";
                 return response;
             }
             catch (Exception ex)

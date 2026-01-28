@@ -292,28 +292,80 @@ namespace MarketApi.Controllers
         }
 
 
-
-
-        private string GetToken(bool isRemember, long id, long roleId)
+        [SwaggerOperation(Summary = "Logo Ekleme")]
+        [HttpPost]
+        [Route("CreateLogo")]
+        public LogoCreateResponse CreateLogo(LogoCreateRequest request)
         {
-            if (_jwtAyarlari.Key == null) throw new Exception("Jwt ayarlarındaki key boş olmaz.");
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtAyarlari.Key));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
             {
-                new Claim("value",id.ToString()),
-                new Claim("value",roleId.ToString())
-            };
+                request.UserId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
 
-            var token = new JwtSecurityToken(_jwtAyarlari.Issuer,
-                _jwtAyarlari.Audience,
-                claims,
-                expires: DateTime.Now.AddDays(30),
-                signingCredentials: credentials);
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                if (roleId != 2)
+                {
+                    var response = new LogoCreateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                    return response;
+                }
+            }
 
+            return _adminService.CreateLogo(request);
         }
+
+
+        [SwaggerOperation(Summary ="Logo Güncelleme")]
+        [HttpPut]
+        [Route("UpdateLogo")]
+        public LogoUpdateResponse UpdateLogo(LogoUpdateRequest request)
+        {
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                request.UserId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+
+                if (roleId != 2)
+                {
+                    var response = new LogoUpdateResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                    return response;
+                }
+            }
+
+            return _adminService.UpdateLogo(request);
+        }
+
+        [SwaggerOperation(Summary ="Logo Silme")]
+        [HttpDelete]
+        [Route("DeleteLogo")]
+        public DeleteLogoResponse DeleteLogo(long logoId)
+        {
+            var request = new DeleteLogoRequest();
+
+            var identity = User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                request.UserId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
+                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+
+                if (roleId != 2)
+                {
+                    var response = new DeleteLogoResponse();
+                    response.Code = "400";
+                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                    return response;
+                }
+            }
+
+            request.LogoId = logoId;
+            return _adminService.DeleteLogo(request);
+        }
+
+
         [SwaggerOperation(Summary = "Ürün Silme")]
         [HttpDelete]
         [Route("DeleteProduct")]
@@ -394,5 +446,33 @@ namespace MarketApi.Controllers
             request.SliderId = sliderId;
             return _adminService.DeleteSlider(request);
         }
+
+        
+
+
+
+
+
+        private string GetToken(bool isRemember, long id, long roleId)
+        {
+            if (_jwtAyarlari.Key == null) throw new Exception("Jwt ayarlarındaki key boş olmaz.");
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtAyarlari.Key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim("value",id.ToString()),
+                new Claim("value",roleId.ToString())
+            };
+
+            var token = new JwtSecurityToken(_jwtAyarlari.Issuer,
+                _jwtAyarlari.Audience,
+                claims,
+                expires: DateTime.Now.AddDays(30),
+                signingCredentials: credentials);
+            return new JwtSecurityTokenHandler().WriteToken(token);
+
+        }
+        
     }
 }

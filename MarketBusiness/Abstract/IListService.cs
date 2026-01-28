@@ -16,6 +16,7 @@ namespace MarketBusiness.Abstract
         CategoryGetByIdResponse GetByIdCategory(CategoryGetByIdRequest request);
         AboutListResponse GetAllAbouts();
         ContactListResponse GetAllContact();
+        LogoListResponse GetLogos();
 
 
 
@@ -32,6 +33,6 @@ namespace MarketBusiness.Abstract
 
 
 
-        
+
     }
 }
