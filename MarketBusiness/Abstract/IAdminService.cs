@@ -39,6 +39,8 @@ namespace MarketBusiness.Abstract
         LogoCreateResponse CreateLogo(LogoCreateRequest request);
         LogoUpdateResponse UpdateLogo(LogoUpdateRequest request);
         DeleteLogoResponse DeleteLogo(DeleteLogoRequest request);
+        UpdateCategoryResponse UpdateCategory(UpdateCategoryRequest request);
+        DeleteContactResponse DeleteContact(DeleteContactRequest request);
 
 
 

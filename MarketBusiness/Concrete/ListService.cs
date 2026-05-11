@@ -11,9 +11,8 @@ using System.Threading.Tasks;
 
 namespace MarketBusiness.Concrete
 {
-    public class ListService:IListService
+    public class ListService : IListService
     {
-
         private readonly IProductRepository _productRepository;
         private readonly ISliderRepository _sliderRepository;
         private readonly IProductImageRepository _productImageRepository;
@@ -22,7 +21,8 @@ namespace MarketBusiness.Concrete
         private readonly IContactRepository _contactRepository;
         private readonly ILogoRepository _logoRepository;
 
-        public ListService(IProductRepository productRepository,
+        public ListService(
+            IProductRepository productRepository,
             ISliderRepository sliderRepository,
             IProductImageRepository productImageRepository,
             ICategoriesRepository categoriesRepository,
@@ -39,21 +39,18 @@ namespace MarketBusiness.Concrete
             _logoRepository = logoRepository;
         }
 
-
-
-
         public ProductListResponse GetAll()
         {
             var response = new ProductListResponse();
 
             try
             {
-                var products = _productRepository.GetList();
+                var products = _productRepository.GetList(x => x.Status == true && x.IsActive == true);
 
                 foreach (var product in products)
                 {
-                    // cover foto bul
-                    var cover = _productImageRepository.GetList(x => x.ProductId == product.Id && x.IsCover)
+                    var cover = _productImageRepository
+                        .GetList(x => x.ProductId == product.Id && x.IsCover == true && x.Status == true)
                         .FirstOrDefault();
 
                     response.Products.Add(new ProductListItem
@@ -77,45 +74,63 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
+
         public ProductGetByIdResponse GetByIdProduct(ProductGetByIdRequest request)
         {
             var response = new ProductGetByIdResponse();
-            if (request.ProductId <= 0)
-            {
-                response.Code = "400";
-                response.Errors.Add("ProductId Zorunludur");
-                return response;
-            }
-            var product = _productRepository.Get(p => p.Id == request.ProductId);
-            var cover = _productImageRepository.GetList(x => x.ProductId == product.Id && x.IsCover)
-                        .FirstOrDefault();
-            if (product == null)
-            {
-                response.Code = "400";
-                response.Errors.Add("Product Bulunamadı");
-                return response;
-            }
-            response.ProductId = product.Id;
-            response.Name = product.Name;
-            response.Price = product.Price;
-            response.CoverBase64 = cover?.Base64;
-            response.CoverContentType = cover?.ContentType;
-            response.Code = "200";
-            response.Message = "Product Getirildi";
-            return response;
 
+            try
+            {
+                if (request.ProductId <= 0)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("ProductId Zorunludur");
+                    return response;
+                }
+
+                var product = _productRepository.Get(p =>
+                    p.Id == request.ProductId &&
+                    p.Status == true &&
+                    p.IsActive == true);
+
+                if (product == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Product Bulunamadı");
+                    return response;
+                }
+
+                var cover = _productImageRepository
+                    .GetList(x => x.ProductId == product.Id && x.IsCover == true && x.Status == true)
+                    .FirstOrDefault();
+
+                response.ProductId = product.Id;
+                response.Name = product.Name;
+                response.Price = product.Price;
+                response.CoverBase64 = cover?.Base64;
+                response.CoverContentType = cover?.ContentType;
+                response.Code = "200";
+                response.Message = "Product Getirildi";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
         }
-
-
-
 
         public SliderListResponse GetAllActiveSlider()
         {
             var response = new SliderListResponse();
+
             try
             {
-                var sliders = _sliderRepository.GetList(x => x.IsActive)
+                var sliders = _sliderRepository
+                    .GetList(x => x.Status == true && x.IsActive == true)
                     .ToList();
+
                 foreach (var s in sliders)
                 {
                     response.Sliders.Add(new SliderListItem
@@ -125,14 +140,12 @@ namespace MarketBusiness.Concrete
                         RedirectUrl = s.RedirectUrl,
                         ImageBase64 = s.ImageBase64,
                         ImageContentType = s.ImageContentType
-
                     });
                 }
 
                 response.Code = "200";
                 response.Message = "Sliderlar Listelendi";
                 return response;
-
             }
             catch (Exception ex)
             {
@@ -140,31 +153,32 @@ namespace MarketBusiness.Concrete
                 response.Errors.Add(ex.Message);
                 return response;
             }
-
         }
-        public AboutListResponse GetAllAbouts() 
+
+        public AboutListResponse GetAllAbouts()
         {
             var response = new AboutListResponse();
-            try 
+
+            try
             {
-                var abouts = _aboutRepository.GetList();
+                var abouts = _aboutRepository.GetList(x => x.Status == true && x.IsActive == true);
+
                 foreach (var about in abouts)
                 {
-                    response.Abouts.Add(new AboutListItem { 
-                    
-                        Title=about.Title,
-                        Content=about.Content,
-                        ImageBase64=about.ImageBase64,
-                        ImageContentType=about.ImageContentType
+                    response.Abouts.Add(new AboutListItem
+                    {
+                        Title = about.Title,
+                        Content = about.Content,
+                        ImageBase64 = about.ImageBase64,
+                        ImageContentType = about.ImageContentType
                     });
-                    
                 }
 
                 response.Code = "200";
                 response.Message = "Hakkımızda Listelendi";
                 return response;
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 response.Code = "400";
                 response.Errors.Add(ex.Message);
@@ -175,19 +189,20 @@ namespace MarketBusiness.Concrete
         public CategoryGetAllResponse GetAllCategory()
         {
             var response = new CategoryGetAllResponse();
+
             try
             {
-                var categories = _categoriesRepository.GetList();
+                var categories = _categoriesRepository.GetList(x => x.Status == true);
+
                 foreach (var category in categories)
                 {
                     response.Categories.Add(new CategoryListItem
                     {
-
                         CategoryId = category.Id,
                         CategoryName = category.CategoryName
-
                     });
                 }
+
                 response.Code = "200";
                 response.Message = "Kategori Listelendi";
                 return response;
@@ -200,58 +215,35 @@ namespace MarketBusiness.Concrete
             }
         }
 
-
-        
-
-
-        public CategoryGetByIdResponse GetByIdCategory(CategoryGetByIdRequest request) 
+        public CategoryGetByIdResponse GetByIdCategory(CategoryGetByIdRequest request)
         {
             var response = new CategoryGetByIdResponse();
-            if (request.CategoryId <= 0) 
-            {
-                response.Code = "400";
-                response.Errors.Add("CategoryId Zorunludur");
-                return response;
-            }
-            var categories = _categoriesRepository.Get(c => c.Id == request.CategoryId);
-            if(categories == null)
-            {
-                response.Code = "400";
-                response.Errors.Add("Kategori Bulunamadı");
-                return response;
-            }
 
-            response.CategoryId = categories.Id;
-            response.CategoryName = categories.CategoryName;
-            response.Code = "200";
-            response.Message = "Kategori getirildi";
-            return response;
-        }
-
-        public ContactListResponse GetAllContact()
-        {
-            var response = new ContactListResponse();
             try
             {
-                var contacts = _contactRepository.GetList();
-                foreach (var contact in contacts)
+                if (request.CategoryId <= 0)
                 {
-                    response.Contacts.Add(new ContactListItem
-                    {
-
-                        Title = contact.Title,
-                        Content = contact.Content,
-                        Phone = contact.Phone,
-                        Email = contact.Email,
-                        Address = contact.Address,
-                        MapUrl = contact.MapUrl
-
-                    });
+                    response.Code = "400";
+                    response.Errors.Add("CategoryId Zorunludur");
+                    return response;
                 }
-                response.Code = "200";
-                response.Message = "İletişim Bilgileri Listelendi";
-                return response;
 
+                var category = _categoriesRepository.Get(c =>
+                    c.Id == request.CategoryId &&
+                    c.Status == true);
+
+                if (category == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Kategori Bulunamadı");
+                    return response;
+                }
+
+                response.CategoryId = category.Id;
+                response.CategoryName = category.CategoryName;
+                response.Code = "200";
+                response.Message = "Kategori getirildi";
+                return response;
             }
             catch (Exception ex)
             {
@@ -261,6 +253,38 @@ namespace MarketBusiness.Concrete
             }
         }
 
+        public ContactListResponse GetAllContact()
+        {
+            var response = new ContactListResponse();
+
+            try
+            {
+                var contacts = _contactRepository.GetList(x => x.Status == true && x.IsActive == true);
+
+                foreach (var contact in contacts)
+                {
+                    response.Contacts.Add(new ContactListItem
+                    {
+                        Title = contact.Title,
+                        Content = contact.Content,
+                        Phone = contact.Phone,
+                        Email = contact.Email,
+                        Address = contact.Address,
+                        MapUrl = contact.MapUrl
+                    });
+                }
+
+                response.Code = "200";
+                response.Message = "İletişim Bilgileri Listelendi";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
         public LogoListResponse GetLogos()
         {
@@ -268,7 +292,7 @@ namespace MarketBusiness.Concrete
 
             try
             {
-                var logos = _logoRepository.GetList(x => x.Status == true);
+                var logos = _logoRepository.GetList(x => x.Status == true && x.IsActive == true);
 
                 foreach (var logo in logos)
                 {
@@ -293,6 +317,5 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
-
     }
 }

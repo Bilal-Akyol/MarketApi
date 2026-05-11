@@ -55,12 +55,16 @@ namespace MarketBusiness.Concrete
             {
                 var validator = new UserLoginValidator();
                 var validatorResult = validator.Validate(request);
+
                 if (!validatorResult.IsValid)
                 {
                     foreach (var err in validatorResult.Errors)
+                    {
                         response.Errors.Add(err.ErrorMessage);
+                    }
+
                     response.Code = "400";
-                    response.Errors.Add("Doğrulama Hatası");
+                    response.Message = "Doğrulama Hatası";
                     return response;
                 }
 
@@ -68,35 +72,52 @@ namespace MarketBusiness.Concrete
                 if (user == null)
                 {
                     response.Code = "400";
-                    response.Errors.Add("Böyle bir kullanıcı bulunamadı.");
+                    response.Message = "Böyle bir kullanıcı bulunamadı.";
+                    return response;
+                }
+
+                if (user.Status != true)
+                {
+                    response.Code = "400";
+                    response.Message = "Bu kullanıcı aktif değil.";
+                    response.Errors.Add("Pasif veya silinmiş kullanıcı giriş yapamaz.");
+                    return response;
+                }
+
+                if (user.EmailConfirmed != true)
+                {
+                    response.Code = "400";
+                    response.Message = "Email doğrulaması tamamlanmamış.";
+                    response.Errors.Add("Lütfen önce email doğrulamasını tamamlayın.");
                     return response;
                 }
 
                 if (user.RoleId != 2)
                 {
                     response.Code = "400";
-                    response.Errors.Add("Sadece Admin girişi kabul edilir.");
+                    response.Message = "Sadece Admin girişi kabul edilir.";
                     return response;
                 }
 
                 if (!VerifyPassword(request.Password, user.Password))
                 {
                     response.Code = "400";
-                    response.Errors.Add("Şifre Yanlıştır");
+                    response.Message = "Şifre Yanlıştır";
                     return response;
                 }
+
                 response.Code = "200";
                 response.Message = "Giriş Başarılı";
                 response.UserId = user.Id;
                 response.RoleId = user.RoleId;
-
                 response.Email = user.Email ?? "";
                 response.FirstName = user.FirstName ?? "";
                 response.LastName = user.LastName ?? "";
                 response.Phone = user.Phone ?? "";
+
                 return response;
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 response.Code = "400";
                 response.Errors.Add(ex.Message);
@@ -108,34 +129,54 @@ namespace MarketBusiness.Concrete
         public AddCategoryResponse AddCategory(AddCategoryRequest request)
         {
             var response = new AddCategoryResponse();
+
             try
             {
                 var validator = new AddCategoryValidator();
                 var validatorResult = validator.Validate(request);
-                if (!validatorResult.IsValid) 
+
+                if (!validatorResult.IsValid)
                 {
                     foreach (var err in validatorResult.Errors)
                     {
                         response.Errors.Add(err.ErrorMessage);
                     }
+
                     response.Code = "400";
                     response.Errors.Add("Doğrulama Hatası");
                     return response;
                 }
-                var category = new Categories();
-                category.CategoryName = request.CategoryName;
-                category.Status = true;
-                category.CreatedDate = DateTime.UtcNow.AddHours(3);
-                _categoryRepository.Add(category);
+
+                var existingCategory = _categoryRepository.Get(x =>
+                    x.Status == true &&
+                    x.CategoryName.ToLower() == request.CategoryName.ToLower());
+
+                if (existingCategory != null)
+                {
+                    response.Code = "400";
+                    response.Message = "Bu kategori zaten mevcut.";
+                    response.Errors.Add("Aynı isimde kategori eklenemez.");
+                    return response;
+                }
+
+                var category = new Categories
+                {
+                    CategoryName = request.CategoryName.Trim(),
+                    Status = true,
+                    CreatedDate = DateTime.UtcNow.AddHours(3)
+                };
+
+                var addedCategory = _categoryRepository.Add(category);
 
                 response.Code = "200";
                 response.Message = "Kategori Başarıyla Eklendi";
+                response.CategoryId = addedCategory.Id;
                 return response;
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 response.Code = "400";
-                response.Errors.Add($"{ex.Message}");
+                response.Errors.Add(ex.Message);
                 return response;
             }
         }
@@ -820,7 +861,93 @@ namespace MarketBusiness.Concrete
         }
 
 
+        public UpdateCategoryResponse UpdateCategory(UpdateCategoryRequest request)
+        {
+            var response = new UpdateCategoryResponse();
 
+            try
+            {
+                var validator = new UpdateCategoryValidator();
+                var validatorResult = validator.Validate(request);
+
+                if (!validatorResult.IsValid)
+                {
+                    foreach (var err in validatorResult.Errors)
+                    {
+                        response.Errors.Add(err.ErrorMessage);
+                    }
+
+                    response.Code = "400";
+                    response.Errors.Add("Doğrulama Hatası");
+                    return response;
+                }
+
+                var category = _categoryRepository.Get(x => x.Id == request.CategoryId && x.Status == true);
+                if (category == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Kategori bulunamadı.");
+                    return response;
+                }
+
+                var sameNameCategory = _categoryRepository.Get(x =>
+                    x.Id != request.CategoryId &&
+                    x.Status == true &&
+                    x.CategoryName.ToLower() == request.CategoryName.ToLower());
+
+                if (sameNameCategory != null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Aynı isimde başka bir kategori zaten mevcut.");
+                    return response;
+                }
+
+                category.CategoryName = request.CategoryName;
+                category.ModifiedDate = DateTime.UtcNow.AddHours(3);
+
+                _categoryRepository.Update(category);
+
+                response.Code = "200";
+                response.Message = "Kategori başarıyla güncellendi";
+                response.CategoryId = category.Id;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public DeleteContactResponse DeleteContact(DeleteContactRequest request)
+        {
+            var response = new DeleteContactResponse();
+
+            try
+            {
+                var contact = _contactRepository.Get(x => x.Id == request.ContactId && x.Status == true);
+
+                if (contact == null)
+                {
+                    response.Code = "400";
+                    response.Message = "İletişim bilgisi bulunamadı.";
+                    return response;
+                }
+
+                _contactRepository.Delete(contact);
+
+                response.Code = "200";
+                response.Message = "İletişim bilgisi silme başarılı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
 
 

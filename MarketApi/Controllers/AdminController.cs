@@ -29,7 +29,6 @@ namespace MarketApi.Controllers
             _adminService = adminService;
             _jwtAyarlari = jwtAyarlari.Value;
             _logger = logger;
-
         }
 
         [SwaggerOperation(Summary = "Admin Girişi Yap")]
@@ -39,11 +38,11 @@ namespace MarketApi.Controllers
         public UserLoginResponse Login(UserLoginRequest request)
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            _logger.LogInformation("Login post method Starting. -" + "Ip adresi;" + ip + "Email:" + request.Email);
-            UserLoginResponse userLoginResponse = _adminService.Login(request);
+            _logger.LogInformation("Login post method Starting. - Ip adresi: " + ip + " Email: " + request.Email);
 
+            var userLoginResponse = _adminService.Login(request);
 
-            if (userLoginResponse.Code.Equals("200"))
+            if (userLoginResponse.Code == "200")
             {
                 userLoginResponse.Token = GetToken(request.isRemember, userLoginResponse.UserId, userLoginResponse.RoleId);
             }
@@ -51,345 +50,351 @@ namespace MarketApi.Controllers
             return userLoginResponse;
         }
 
-        [SwaggerOperation(Summary ="Kategori Ekleme")]
+        [SwaggerOperation(Summary = "Kategori Ekleme")]
         [HttpPost]
         [Route("AddCategory")]
-        public AddCategoryResponse AddCategory(AddCategoryRequest request) 
+        public AddCategoryResponse AddCategory(AddCategoryRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if(identity != null) 
+            var response = new AddCategoryResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var id = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = id;
-
-
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-
-                if(roleId !=2)
-                {
-                    AddCategoryResponse response = new AddCategoryResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.AddCategory(request);
         }
-
 
         [SwaggerOperation("Ürün ekleme")]
         [HttpPost]
         [Route("AddProduct")]
-        public ProductCreateResponse CreateProduct(ProductCreateRequest request) 
+        public ProductCreateResponse CreateProduct(ProductCreateRequest request)
         {
-            
-            var identity = User.Identity as ClaimsIdentity;
+            var response = new ProductCreateResponse();
 
-            if (identity != null) 
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-
-                // 2) Token içindeki RoleId'yi al
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-
-                if (roleId != 2) 
-                {
-                    ProductCreateResponse response = new ProductCreateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.CreateProduct(request);
-
         }
-
-
-        
-        
 
         [SwaggerOperation("Ürün güncelleme")]
         [HttpPut]
         [Route("ProductAddUpdate")]
         public ProductUpdateResponse UpdateProduct(ProductUpdateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
+            var response = new ProductUpdateResponse();
 
-            if (identity != null)
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-
-                // Token içindeki RoleId
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-
-                if (roleId != 2)
-                {
-                    ProductUpdateResponse response = new ProductUpdateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.UpdateProduct(request);
         }
 
-
-        [SwaggerOperation(Summary ="Slider Ekleme")]
+        [SwaggerOperation(Summary = "Slider Ekleme")]
         [HttpPost]
         [Route("CreateSlider")]
-        public SliderCreateResponse SliderCreate(SliderCreateRequest request) 
+        public SliderCreateResponse SliderCreate(SliderCreateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if(identity != null) 
-            {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
+            var response = new SliderCreateResponse();
 
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-                if(roleId != 2) 
-                {
-                    var response = new SliderCreateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-                }
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
-            return _adminService.SliderCreate(request);
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
 
+            request.UserId = userId;
+            return _adminService.SliderCreate(request);
         }
 
-        [SwaggerOperation(Summary ="Slider Güncelleme")]
+        [SwaggerOperation(Summary = "Slider Güncelleme")]
         [HttpPut]
         [Route("UpdateSlider")]
-        public SliderUpdateResponse SliderUpdate(SliderUpdateRequest request) 
+        public SliderUpdateResponse SliderUpdate(SliderUpdateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
+            var response = new SliderUpdateResponse();
 
-            if(identity !=null)
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-
-                if (roleId != 2) 
-                {
-                    var response = new SliderUpdateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
-                    return response;
-                }
-
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.SliderUpdate(request);
         }
 
-
-        
-
-
-        [SwaggerOperation(Summary ="Hakkımızda Ekleme")]
+        [SwaggerOperation(Summary = "Hakkımızda Ekleme")]
         [HttpPost]
         [Route("CreateAbout")]
-        public AboutCreateResponse AboutCreate(AboutCreateRequest request) 
+        public AboutCreateResponse AboutCreate(AboutCreateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if(identity != null) 
+            var response = new AboutCreateResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-                if(roleId != 2) 
-                {
-                    var response = new AboutCreateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.AboutCreate(request);
         }
 
-
-        
-
-        [SwaggerOperation(Summary ="Hakkımızda Güncelleme")]
+        [SwaggerOperation(Summary = "Hakkımızda Güncelleme")]
         [HttpPut]
         [Route("UpdateAbout")]
-        public AboutUpdateResponse AboutUpdate(AboutUpdateRequest request) 
+        public AboutUpdateResponse AboutUpdate(AboutUpdateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if(identity != null) 
+            var response = new AboutUpdateResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-
-                if (roleId != 2) 
-                {
-                    var response = new AboutUpdateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.AboutUpdate(request);
-
         }
-
-
-
 
         [SwaggerOperation(Summary = "İletişim Ekleme")]
         [HttpPost]
         [Route("CreateContact")]
         public ContactCreateResponse ContactCreate(ContactCreateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
+            var response = new ContactCreateResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-                if (roleId != 2)
-                {
-                    var response = new ContactCreateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.ContactCreate(request);
         }
-
 
         [SwaggerOperation(Summary = "İletişim Bilgilerini Güncelleme")]
         [HttpPut]
         [Route("ContactUpdate")]
         public ContactUpdateResponse ContactUpdate(ContactUpdateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
+            var response = new ContactUpdateResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-                if (roleId != 2)
-                {
-                    ContactUpdateResponse response = new ContactUpdateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
-                    return response;
-
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.ContactUpdate(request);
         }
-
 
         [SwaggerOperation(Summary = "Logo Ekleme")]
         [HttpPost]
         [Route("CreateLogo")]
         public LogoCreateResponse CreateLogo(LogoCreateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
-            {
-                request.UserId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+            var response = new LogoCreateResponse();
 
-                if (roleId != 2)
-                {
-                    var response = new LogoCreateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
-                    return response;
-                }
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.CreateLogo(request);
         }
 
-
-        [SwaggerOperation(Summary ="Logo Güncelleme")]
+        [SwaggerOperation(Summary = "Logo Güncelleme")]
         [HttpPut]
         [Route("UpdateLogo")]
         public LogoUpdateResponse UpdateLogo(LogoUpdateRequest request)
         {
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
-            {
-                request.UserId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
+            var response = new LogoUpdateResponse();
 
-                if (roleId != 2)
-                {
-                    var response = new LogoUpdateResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
-                    return response;
-                }
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            request.UserId = userId;
             return _adminService.UpdateLogo(request);
         }
 
-        [SwaggerOperation(Summary ="Logo Silme")]
+        [SwaggerOperation(Summary = "Logo Silme")]
         [HttpDelete]
         [Route("DeleteLogo")]
         public DeleteLogoResponse DeleteLogo(long logoId)
         {
-            var request = new DeleteLogoRequest();
+            var response = new DeleteLogoResponse();
 
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                request.UserId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-
-                if (roleId != 2)
-                {
-                    var response = new DeleteLogoResponse();
-                    response.Code = "400";
-                    response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
-                    return response;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
-            request.LogoId = logoId;
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            var request = new DeleteLogoRequest
+            {
+                UserId = userId,
+                LogoId = logoId
+            };
+
             return _adminService.DeleteLogo(request);
         }
-
 
         [SwaggerOperation(Summary = "Ürün Silme")]
         [HttpDelete]
         [Route("DeleteProduct")]
         public DeleteProductResponse DeleteProduct(long productId)
         {
-            var request = new DeleteProductRequest();
+            var response = new DeleteProductResponse();
 
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-                if (roleId != 2)
-                {
-                    var resp = new DeleteProductResponse();
-                    resp.Code = "400";
-                    resp.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
-                    return resp;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
-            request.ProductId = productId;
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            var request = new DeleteProductRequest
+            {
+                UserId = userId,
+                ProductId = productId
+            };
+
             return _adminService.DeleteProduct(request);
         }
 
@@ -398,25 +403,29 @@ namespace MarketApi.Controllers
         [Route("DeleteCategory")]
         public DeleteCategoryResponse DeleteCategory(long categoryId)
         {
-            var request = new DeleteCategoryRequest();
+            var response = new DeleteCategoryResponse();
 
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-                if (roleId != 2)
-                {
-                    var resp = new DeleteCategoryResponse();
-                    resp.Code = "400";
-                    resp.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
-                    return resp;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
-            request.CategoryId = categoryId;
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            var request = new DeleteCategoryRequest
+            {
+                UserId = userId,
+                CategoryId = categoryId
+            };
+
             return _adminService.DeleteCategory(request);
         }
 
@@ -425,54 +434,133 @@ namespace MarketApi.Controllers
         [Route("DeleteSlider")]
         public DeleteSliderResponse DeleteSlider(long sliderId)
         {
-            var request = new DeleteSliderRequest();
+            var response = new DeleteSliderResponse();
 
-            var identity = User.Identity as ClaimsIdentity;
-            if (identity != null)
+            if (!TryGetUserInfo(out var userId, out var roleId))
             {
-                var userId = Convert.ToInt64(identity.Claims.ElementAt(0).Value);
-                request.UserId = userId;
-
-                var roleId = Convert.ToInt64(identity.Claims.ElementAt(1).Value);
-                if (roleId != 2)
-                {
-                    var resp = new DeleteSliderResponse();
-                    resp.Code = "400";
-                    resp.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
-                    return resp;
-                }
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
             }
 
-            request.SliderId = sliderId;
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            var request = new DeleteSliderRequest
+            {
+                UserId = userId,
+                SliderId = sliderId
+            };
+
             return _adminService.DeleteSlider(request);
         }
 
-        
+        [SwaggerOperation(Summary = "Kategori Güncelleme")]
+        [HttpPut]
+        [Route("UpdateCategory")]
+        public UpdateCategoryResponse UpdateCategory(UpdateCategoryRequest request)
+        {
+            var response = new UpdateCategoryResponse();
 
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
+            }
 
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
+                return response;
+            }
 
+            request.UserId = userId;
+            return _adminService.UpdateCategory(request);
+        }
 
+        [SwaggerOperation(Summary = "İletişim Bilgisi Silme")]
+        [HttpDelete]
+        [Route("DeleteContact")]
+        public DeleteContactResponse DeleteContact(long contactId)
+        {
+            var response = new DeleteContactResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
+            }
+
+            if (roleId != 2)
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            var request = new DeleteContactRequest
+            {
+                UserId = userId,
+                ContactId = contactId
+            };
+
+            return _adminService.DeleteContact(request);
+        }
+
+        private bool TryGetUserInfo(out long userId, out long roleId)
+        {
+            userId = 0;
+            roleId = 0;
+
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            var roleIdClaim = User.FindFirst("roleId")?.Value;
+
+            if (!long.TryParse(userIdClaim, out userId))
+                return false;
+
+            if (!long.TryParse(roleIdClaim, out roleId))
+                return false;
+
+            return true;
+        }
 
         private string GetToken(bool isRemember, long id, long roleId)
         {
-            if (_jwtAyarlari.Key == null) throw new Exception("Jwt ayarlarındaki key boş olmaz.");
+            if (string.IsNullOrWhiteSpace(_jwtAyarlari.Key))
+                throw new Exception("Jwt ayarlarındaki key boş olamaz.");
+
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtAyarlari.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-                new Claim("value",id.ToString()),
-                new Claim("value",roleId.ToString())
+                new Claim("userId", id.ToString()),
+                new Claim("roleId", roleId.ToString())
             };
 
-            var token = new JwtSecurityToken(_jwtAyarlari.Issuer,
-                _jwtAyarlari.Audience,
-                claims,
-                expires: DateTime.Now.AddDays(30),
-                signingCredentials: credentials);
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var expireDate = isRemember
+                ? DateTime.Now.AddDays(30)
+                : DateTime.Now.AddHours(12);
 
+            var token = new JwtSecurityToken(
+                issuer: _jwtAyarlari.Issuer,
+                audience: _jwtAyarlari.Audience,
+                claims: claims,
+                expires: expireDate,
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        
     }
 }

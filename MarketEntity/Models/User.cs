@@ -10,11 +10,10 @@ using System.Threading.Tasks;
 namespace MarketEntity.Models
 {
     [Table("user")]
-    public class User:BaseEntity
+    public class User : BaseEntity
     {
         [Column("first_name")]
         public string FirstName { get; set; }
-
 
         [Column("last_name")]
         public string LastName { get; set; }
@@ -37,7 +36,6 @@ namespace MarketEntity.Models
         [Column("role_id")]
         public long RoleId { get; set; }
 
-        [Column("Remember")]
         [NotMapped]
         public bool Remember { get; set; }
     }

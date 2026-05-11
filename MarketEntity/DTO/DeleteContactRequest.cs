@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace MarketEntity.DTO
 {
-    public class AddCategoryResponse : BaseApiResponse
+    public class DeleteContactRequest : BaseApiRequest
     {
-        public long CategoryId { get; set; }
+        public long ContactId { get; set; }
     }
 }
