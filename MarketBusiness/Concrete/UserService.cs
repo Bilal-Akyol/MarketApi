@@ -242,5 +242,113 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
+
+        public GetMySessionsResponse GetMySessions(GetMySessionsRequest request)
+        {
+            var response = new GetMySessionsResponse();
+
+            try
+            {
+                var validator = new GetMySessionsValidator();
+                var result = validator.Validate(request);
+
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Message = "Doğrulama hatası";
+                    return response;
+                }
+
+                var sessions = _userSessionRepository
+                    .GetList(x => x.UserId == request.UserId && x.Status == true)
+                    .OrderByDescending(x => x.CreatedDate)
+                    .ToList();
+
+                foreach (var session in sessions)
+                {
+                    response.Sessions.Add(new UserSessionListModel
+                    {
+                        SessionId = session.Id,
+                        SessionToken = session.SessionToken,
+                        IpAddress = session.IpAddress,
+                        UserAgent = session.UserAgent,
+                        ExpireAt = session.ExpireAt,
+                        IsActive = session.IsActive,
+                        CreatedDate = session.CreatedDate,
+                        ModifiedDate = session.ModifiedDate
+                    });
+                }
+
+                response.Code = "200";
+                response.Message = "Oturumlar getirildi.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public LogoutSessionResponse LogoutSession(LogoutSessionRequest request)
+        {
+            var response = new LogoutSessionResponse();
+
+            try
+            {
+                var validator = new LogoutSessionValidator();
+                var result = validator.Validate(request);
+
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Message = "Doğrulama hatası";
+                    return response;
+                }
+
+                var session = _userSessionRepository.Get(x =>
+                    x.Id == request.SessionId &&
+                    x.UserId == request.UserId &&
+                    x.Status == true);
+
+                if (session == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Oturum bulunamadı.");
+                    return response;
+                }
+
+                if (!session.IsActive)
+                {
+                    response.Code = "200";
+                    response.Message = "Oturum zaten kapalı.";
+                    response.SessionId = session.Id;
+                    return response;
+                }
+
+                session.IsActive = false;
+                session.ExpireAt = DateTime.UtcNow;
+                session.ModifiedDate = DateTime.UtcNow;
+                _userSessionRepository.Update(session);
+
+                response.SessionId = session.Id;
+                response.Code = "200";
+                response.Message = "Oturum kapatıldı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
     }
 }

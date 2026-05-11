@@ -74,5 +74,32 @@ namespace MarketApi.Controllers
             request.UserId = userId;
             return _userService.DeleteMyAccount(request);
         }
+        [SwaggerOperation(Summary = "Açık oturumlarımı getir")]
+        [HttpGet]
+        [Route("GetMySessions")]
+        public GetMySessionsResponse GetMySessions()
+        {
+            var request = new GetMySessionsRequest();
+
+            var userIdStr = User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+            if (!long.TryParse(userIdStr, out var userId))
+                userId = 0;
+
+            request.UserId = userId;
+            return _userService.GetMySessions(request);
+        }
+
+        [SwaggerOperation(Summary = "Tek bir oturumu kapat")]
+        [HttpPost]
+        [Route("LogoutSession")]
+        public LogoutSessionResponse LogoutSession(LogoutSessionRequest request)
+        {
+            var userIdStr = User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+            if (!long.TryParse(userIdStr, out var userId))
+                userId = 0;
+
+            request.UserId = userId;
+            return _userService.LogoutSession(request);
+        }
     }
 }

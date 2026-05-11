@@ -13,5 +13,7 @@ namespace MarketBusiness.Abstract
         UpdateProfileResponse UpdateProfile(UpdateProfileRequest request);
         ChangeMyPasswordResponse ChangeMyPassword(ChangeMyPasswordRequest request);
         DeleteMyAccountResponse DeleteMyAccount(DeleteMyAccountRequest request);
+        GetMySessionsResponse GetMySessions(GetMySessionsRequest request);
+        LogoutSessionResponse LogoutSession(LogoutSessionRequest request);
     }
 }
