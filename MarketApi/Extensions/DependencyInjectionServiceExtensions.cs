@@ -18,6 +18,7 @@ namespace MarketApi.Extensions
 
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IListService, ListService>();
+            services.AddScoped<IAuthService, AuthService>();
 
 
 

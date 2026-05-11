@@ -9,7 +9,6 @@ namespace MarketBusiness.Abstract
 {
     public interface IAdminService
     {
-        UserLoginResponse Login(UserLoginRequest request);
 
 
         AddCategoryResponse AddCategory(AddCategoryRequest request);
@@ -41,10 +40,6 @@ namespace MarketBusiness.Abstract
         DeleteLogoResponse DeleteLogo(DeleteLogoRequest request);
         UpdateCategoryResponse UpdateCategory(UpdateCategoryRequest request);
         DeleteContactResponse DeleteContact(DeleteContactRequest request);
-
-
-
-
 
 
 

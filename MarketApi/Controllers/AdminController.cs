@@ -31,24 +31,7 @@ namespace MarketApi.Controllers
             _logger = logger;
         }
 
-        [SwaggerOperation(Summary = "Admin Girişi Yap")]
-        [AllowAnonymous]
-        [HttpPost]
-        [Route("Login")]
-        public UserLoginResponse Login(UserLoginRequest request)
-        {
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            _logger.LogInformation("Login post method Starting. - Ip adresi: " + ip + " Email: " + request.Email);
-
-            var userLoginResponse = _adminService.Login(request);
-
-            if (userLoginResponse.Code == "200")
-            {
-                userLoginResponse.Token = GetToken(request.isRemember, userLoginResponse.UserId, userLoginResponse.RoleId);
-            }
-
-            return userLoginResponse;
-        }
+        
 
         [SwaggerOperation(Summary = "Kategori Ekleme")]
         [HttpPost]

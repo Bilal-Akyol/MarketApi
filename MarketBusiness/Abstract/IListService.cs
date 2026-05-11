@@ -19,20 +19,5 @@ namespace MarketBusiness.Abstract
         LogoListResponse GetLogos();
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }
