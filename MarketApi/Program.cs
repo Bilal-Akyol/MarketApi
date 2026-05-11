@@ -1,58 +1,47 @@
 ﻿using MarketApi.Extensions;
 using MarketData.Concrete.Ef;
-using MarketEntity.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext'i connection string ile net bağla (kurumsal doğru kullanım)
 builder.Services.AddDbContext<MarketDbContext>();
 
-// Jwt ayarlarını appsettings.json -> "Jwt" bölümünden bind et
 builder.Services.Configure<Jwt>(builder.Configuration.GetSection("Jwt"));
 var jwt = builder.Configuration.GetSection("Jwt").Get<Jwt>();
 
-// Jwt config eksikse başta patlat ki runtime'da gizli hata olmasın
 if (jwt == null || string.IsNullOrWhiteSpace(jwt.Key) ||
     string.IsNullOrWhiteSpace(jwt.Issuer) || string.IsNullOrWhiteSpace(jwt.Audience))
     throw new Exception("Jwt config eksik (Key/Issuer/Audience).");
 
-// JWT Bearer doğrulama kuralları
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,                 // Issuer kontrolü
+            ValidateIssuer = true,
             ValidIssuer = jwt.Issuer,
 
-            ValidateAudience = true,               // Audience kontrolü
+            ValidateAudience = true,
             ValidAudience = jwt.Audience,
 
-            ValidateIssuerSigningKey = true,       // İmza kontrolü (Key)
+            ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
 
-            ValidateLifetime = true,               // Süre kontrolü
-            ClockSkew = TimeSpan.Zero              // 5dk toleransı kapat
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
     });
 
-// Base64 gibi büyük JSON body gelirse limit (10MB)
 builder.WebHost.ConfigureKestrel(o =>
     o.Limits.MaxRequestBodySize = 10 * 1024 * 1024
 );
-builder.Services.AddDependency(); //DI kayıtlarını uygular
 
-
+builder.Services.AddDependency();
 builder.Services.AddControllers();
 
-// Swagger (basit kurulum)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -86,22 +75,15 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Swagger sadece Development'ta
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-//  Token'ı okuyup kullanıcıyı oluşturur (User.Identity) yoksa Authorize çalışmaz
 app.UseAuthentication();
-
-// Authorization, Authentication'dan sonra olmalı
+app.UseJwtSessionValidation();   
 app.UseAuthorization();
 
 app.MapControllers();
-
 
 app.Run();

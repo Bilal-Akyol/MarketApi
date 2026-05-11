@@ -18,13 +18,15 @@ namespace MarketBusiness.Concrete
         private readonly IUserRepository _userRepository;
         private readonly IUserSessionRepository _userSessionRepository;
 
-        public AuthService(IUserRepository userRepository, IUserSessionRepository userSessionRepository)
+        public AuthService(
+            IUserRepository userRepository,
+            IUserSessionRepository userSessionRepository)
         {
             _userRepository = userRepository;
             _userSessionRepository = userSessionRepository;
         }
 
-        public UserLoginResponse Login(UserLoginRequest request)
+        public UserLoginResponse Login(UserLoginRequest request, string ipAddress, string userAgent)
         {
             var response = new UserLoginResponse();
 
@@ -59,12 +61,29 @@ namespace MarketBusiness.Concrete
                     return response;
                 }
 
-                if (!VerifyPassword(request.Password, user.Password))
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                 {
                     response.Code = "400";
                     response.Message = "Şifre yanlıştır.";
                     return response;
                 }
+
+                var now = DateTime.UtcNow;
+                var expireAt = request.isRemember ? now.AddDays(30) : now.AddHours(12);
+                var sessionToken = Guid.NewGuid().ToString("N");
+
+                _userSessionRepository.Add(new UserSession
+                {
+                    UserId = user.Id,
+                    SessionToken = sessionToken,
+                    ExpireAt = expireAt,
+                    IsActive = true,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    Status = true,
+                    CreatedDate = now,
+                    ModifiedDate = now
+                });
 
                 response.Code = "200";
                 response.Message = "Giriş başarılı";
@@ -74,6 +93,7 @@ namespace MarketBusiness.Concrete
                 response.FirstName = user.FirstName ?? "";
                 response.LastName = user.LastName ?? "";
                 response.Phone = user.Phone ?? "";
+                response.SessionToken = sessionToken;
 
                 return response;
             }
@@ -140,36 +160,41 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
+
         public LogoutResponse Logout(LogoutRequest request)
         {
             var response = new LogoutResponse();
 
             try
             {
-                if (request.UserId <= 0)
+                if (request.UserId <= 0 || string.IsNullOrWhiteSpace(request.SessionToken))
                 {
                     response.Code = "400";
-                    response.Errors.Add("UserId zorunludur.");
+                    response.Errors.Add("Geçersiz oturum bilgisi.");
                     return response;
                 }
 
-                var now = DateTime.UtcNow;
-
-                var sessions = _userSessionRepository.GetList(x =>
+                var session = _userSessionRepository.Get(x =>
                     x.UserId == request.UserId &&
-                    x.IsActive == true &&
-                    x.Status == true);
+                    x.SessionToken == request.SessionToken &&
+                    x.Status == true &&
+                    x.IsActive == true);
 
-                foreach (var session in sessions)
+                if (session == null)
                 {
-                    session.IsActive = false;
-                    session.ExpireAt = now;
-                    session.ModifiedDate = now;
-                    _userSessionRepository.Update(session);
+                    response.Code = "200";
+                    response.Message = "Oturum zaten kapalı.";
+                    return response;
                 }
 
+                session.IsActive = false;
+                session.ExpireAt = DateTime.UtcNow;
+                session.ModifiedDate = DateTime.UtcNow;
+
+                _userSessionRepository.Update(session);
+
                 response.Code = "200";
-                response.Message = "Çıkış yapıldı. Tüm oturumlar kapatıldı.";
+                response.Message = "Çıkış yapıldı.";
                 return response;
             }
             catch (Exception ex)
@@ -178,13 +203,6 @@ namespace MarketBusiness.Concrete
                 response.Errors.Add(ex.Message);
                 return response;
             }
-        }
-
-
-        private bool VerifyPassword(string password, string passwordHash)
-        {
-            if (string.IsNullOrWhiteSpace(passwordHash)) return false;
-            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
     }
 }

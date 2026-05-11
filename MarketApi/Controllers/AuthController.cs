@@ -12,6 +12,7 @@ using System.Text;
 
 namespace MarketApi.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -31,11 +32,19 @@ namespace MarketApi.Controllers
         [SwaggerOperation(Summary = "User ve Admin ortak giriş")]
         public UserLoginResponse Login(UserLoginRequest request)
         {
-            var response = _authService.Login(request);
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+            var userAgent = Request.Headers["User-Agent"].ToString() ?? "";
+
+            var response = _authService.Login(request, ip, userAgent);
 
             if (response.Code == "200")
             {
-                response.Token = GetToken(request.isRemember, response.UserId, response.RoleId);
+                response.Token = GetToken(
+                    request.isRemember,
+                    response.UserId,
+                    response.RoleId,
+                    response.SessionToken
+                );
             }
 
             return response;
@@ -70,7 +79,7 @@ namespace MarketApi.Controllers
             return _authService.Logout(request);
         }
 
-        private string GetToken(bool isRemember, long id, long roleId)
+        private string GetToken(bool isRemember, long id, long roleId, string sessionToken)
         {
             if (string.IsNullOrWhiteSpace(_jwtAyarlari.Key))
                 throw new Exception("Jwt ayarlarındaki key boş olamaz.");
@@ -81,7 +90,8 @@ namespace MarketApi.Controllers
             var claims = new[]
             {
                 new Claim("userId", id.ToString()),
-                new Claim("roleId", roleId.ToString())
+                new Claim("roleId", roleId.ToString()),
+                new Claim("sessionToken", sessionToken ?? "")
             };
 
             var expireDate = isRemember

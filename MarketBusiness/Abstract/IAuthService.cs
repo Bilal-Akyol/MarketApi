@@ -9,7 +9,7 @@ namespace MarketBusiness.Abstract
 {
     public interface IAuthService
     {
-        UserLoginResponse Login(UserLoginRequest request);
+        UserLoginResponse Login(UserLoginRequest request, string ipAddress, string userAgent);
         UserRegisterResponse Register(UserRegisterRequest request);
         LogoutResponse Logout(LogoutRequest request);
     }
