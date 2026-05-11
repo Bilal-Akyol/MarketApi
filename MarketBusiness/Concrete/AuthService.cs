@@ -1,6 +1,8 @@
 ﻿using MarketBusiness.Abstract;
 using MarketData.Abstract;
+using MarketData.Concrete.Ef;
 using MarketEntity.DTO;
+using MarketEntity.Enum;
 using MarketEntity.Models;
 using MarketEntity.Validators;
 using System;
@@ -14,10 +16,12 @@ namespace MarketBusiness.Concrete
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IUserSessionRepository _userSessionRepository;
 
-        public AuthService(IUserRepository userRepository)
+        public AuthService(IUserRepository userRepository, IUserSessionRepository userSessionRepository)
         {
             _userRepository = userRepository;
+            _userSessionRepository = userSessionRepository;
         }
 
         public UserLoginResponse Login(UserLoginRequest request)
@@ -65,7 +69,7 @@ namespace MarketBusiness.Concrete
                 response.Code = "200";
                 response.Message = "Giriş başarılı";
                 response.UserId = user.Id;
-                response.RoleId = user.RoleId;
+                response.RoleId = (long)user.RoleId;
                 response.Email = user.Email ?? "";
                 response.FirstName = user.FirstName ?? "";
                 response.LastName = user.LastName ?? "";
@@ -117,7 +121,7 @@ namespace MarketBusiness.Concrete
                     Phone = request.Phone,
                     Ip = request.Ip,
                     EmailConfirmed = true,
-                    RoleId = 1, // normal user
+                    RoleId = Role.User,
                     Status = true,
                     CreatedDate = DateTime.UtcNow
                 };
@@ -136,6 +140,46 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
+        public LogoutResponse Logout(LogoutRequest request)
+        {
+            var response = new LogoutResponse();
+
+            try
+            {
+                if (request.UserId <= 0)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("UserId zorunludur.");
+                    return response;
+                }
+
+                var now = DateTime.UtcNow;
+
+                var sessions = _userSessionRepository.GetList(x =>
+                    x.UserId == request.UserId &&
+                    x.IsActive == true &&
+                    x.Status == true);
+
+                foreach (var session in sessions)
+                {
+                    session.IsActive = false;
+                    session.ExpireAt = now;
+                    session.ModifiedDate = now;
+                    _userSessionRepository.Update(session);
+                }
+
+                response.Code = "200";
+                response.Message = "Çıkış yapıldı. Tüm oturumlar kapatıldı.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
 
         private bool VerifyPassword(string password, string passwordHash)
         {

@@ -1,6 +1,7 @@
 ﻿using MarketApi.Extensions;
 using MarketBusiness.Abstract;
 using MarketEntity.DTO;
+using MarketEntity.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
@@ -21,17 +22,11 @@ namespace MarketApi.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
-        private readonly Jwt _jwtAyarlari;
-        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IAdminService adminService, IOptions<Jwt> jwtAyarlari, ILogger<AdminController> logger)
+        public AdminController(IAdminService adminService)
         {
             _adminService = adminService;
-            _jwtAyarlari = jwtAyarlari.Value;
-            _logger = logger;
         }
-
-        
 
         [SwaggerOperation(Summary = "Kategori Ekleme")]
         [HttpPost]
@@ -48,7 +43,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -59,7 +54,7 @@ namespace MarketApi.Controllers
             return _adminService.AddCategory(request);
         }
 
-        [SwaggerOperation("Ürün ekleme")]
+        [SwaggerOperation(Summary = "Ürün ekleme")]
         [HttpPost]
         [Route("AddProduct")]
         public ProductCreateResponse CreateProduct(ProductCreateRequest request)
@@ -74,7 +69,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -85,7 +80,7 @@ namespace MarketApi.Controllers
             return _adminService.CreateProduct(request);
         }
 
-        [SwaggerOperation("Ürün güncelleme")]
+        [SwaggerOperation(Summary = "Ürün güncelleme")]
         [HttpPut]
         [Route("ProductAddUpdate")]
         public ProductUpdateResponse UpdateProduct(ProductUpdateRequest request)
@@ -100,7 +95,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -126,7 +121,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -152,7 +147,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -178,7 +173,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -204,7 +199,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -230,7 +225,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -256,7 +251,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -282,7 +277,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -308,7 +303,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -334,7 +329,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -365,7 +360,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -396,7 +391,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -427,7 +422,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -458,7 +453,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok");
@@ -484,7 +479,7 @@ namespace MarketApi.Controllers
                 return response;
             }
 
-            if (roleId != 2)
+            if (!IsAdmin(roleId))
             {
                 response.Code = "400";
                 response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
@@ -517,33 +512,9 @@ namespace MarketApi.Controllers
             return true;
         }
 
-        private string GetToken(bool isRemember, long id, long roleId)
+        private bool IsAdmin(long roleId)
         {
-            if (string.IsNullOrWhiteSpace(_jwtAyarlari.Key))
-                throw new Exception("Jwt ayarlarındaki key boş olamaz.");
-
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtAyarlari.Key));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-                new Claim("userId", id.ToString()),
-                new Claim("roleId", roleId.ToString())
-            };
-
-            var expireDate = isRemember
-                ? DateTime.Now.AddDays(30)
-                : DateTime.Now.AddHours(12);
-
-            var token = new JwtSecurityToken(
-                issuer: _jwtAyarlari.Issuer,
-                audience: _jwtAyarlari.Audience,
-                claims: claims,
-                expires: expireDate,
-                signingCredentials: credentials
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return roleId == (long)Role.Admin;
         }
     }
 }

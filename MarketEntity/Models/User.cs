@@ -1,4 +1,5 @@
 ﻿using MarketCore.Entities;
+using MarketEntity.Enum;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace MarketEntity.Models
         public string Phone { get; set; }
 
         [Column("role_id")]
-        public long RoleId { get; set; }
+        public Role RoleId { get; set; }
 
         [NotMapped]
         public bool Remember { get; set; }

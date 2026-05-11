@@ -15,5 +15,6 @@ namespace MarketEntity.DTO
         public string LastName { get; set; }
         public string Phone { get; set; }
         public long RoleId { get; set; }
+        public string SessionToken { get; set; }
     }
 }

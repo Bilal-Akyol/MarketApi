@@ -30,6 +30,7 @@ namespace MarketApi.Extensions
             services.AddScoped<IAboutRepository, EfAboutRepository>();
             services.AddScoped<IContactRepository, EfContactRepository>();
             services.AddScoped<ILogoRepository, EfLogoRepository>();
+            services.AddScoped<IUserSessionRepository, EfUserSessionRepository>();
 
 
 

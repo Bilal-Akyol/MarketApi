@@ -11,5 +11,6 @@ namespace MarketBusiness.Abstract
     {
         UserLoginResponse Login(UserLoginRequest request);
         UserRegisterResponse Register(UserRegisterRequest request);
+        LogoutResponse Logout(LogoutRequest request);
     }
 }

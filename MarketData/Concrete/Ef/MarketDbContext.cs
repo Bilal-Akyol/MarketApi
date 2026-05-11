@@ -26,6 +26,7 @@ namespace MarketData.Concrete.Ef
         public DbSet<About> Abouts { get; set; }
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<Logo> Logos { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
 
 
 

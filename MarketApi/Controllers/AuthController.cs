@@ -51,6 +51,25 @@ namespace MarketApi.Controllers
             return _authService.Register(request);
         }
 
+        [HttpPost]
+        [Route("Logout")]
+        [SwaggerOperation(Summary = "Logout")]
+        public LogoutResponse Logout()
+        {
+            var request = new LogoutRequest();
+
+            var userIdStr = User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+            var sessionToken = User.Claims.FirstOrDefault(c => c.Type == "sessionToken")?.Value;
+
+            if (!long.TryParse(userIdStr, out var userId))
+                userId = 0;
+
+            request.UserId = userId;
+            request.SessionToken = sessionToken;
+
+            return _authService.Logout(request);
+        }
+
         private string GetToken(bool isRemember, long id, long roleId)
         {
             if (string.IsNullOrWhiteSpace(_jwtAyarlari.Key))
