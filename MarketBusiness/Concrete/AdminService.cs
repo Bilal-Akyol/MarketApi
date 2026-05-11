@@ -2,6 +2,7 @@
 using MarketData.Abstract;
 using MarketData.Concrete.Ef;
 using MarketEntity.DTO;
+using MarketEntity.Enum;
 using MarketEntity.Models;
 using MarketEntity.Validators;
 using System;
@@ -22,6 +23,7 @@ namespace MarketBusiness.Concrete
         private readonly IAboutRepository _aboutRepository;
         private readonly IContactRepository _contactRepository;
         private readonly ILogoRepository _logoRepository;
+        private readonly IUserSessionRepository _userSessionRepository;
 
         public AdminService(IUserRepository userRepository,
             ICategoriesRepository categoriesRepository,
@@ -30,7 +32,8 @@ namespace MarketBusiness.Concrete
             ISliderRepository sliderRepository,
             IAboutRepository aboutRepository,
             IContactRepository contactRepository,
-            ILogoRepository logoRepository
+            ILogoRepository logoRepository,
+            IUserSessionRepository userSessionRepository
             )
         {
             _userRepository = userRepository;
@@ -41,7 +44,7 @@ namespace MarketBusiness.Concrete
             _aboutRepository = aboutRepository;
             _contactRepository = contactRepository;
             _logoRepository = logoRepository;
-            
+            _userSessionRepository = userSessionRepository;
         }
 
 
@@ -869,7 +872,212 @@ namespace MarketBusiness.Concrete
                 return response;
             }
         }
+        public AdminGetAllUsersResponse AdminGetAllUsers(AdminGetAllUsersRequest request)
+        {
+            var response = new AdminGetAllUsersResponse();
 
+            try
+            {
+                request ??= new AdminGetAllUsersRequest();
+
+                var validator = new AdminGetAllUsersValidator();
+                var result = validator.Validate(request);
+
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Message = "Doğrulama hatası";
+                    return response;
+                }
+
+                var query = _userRepository.GetList().AsQueryable();
+
+                if (request.Status.HasValue)
+                    query = query.Where(x => x.Status == request.Status.Value);
+
+                var totalCount = query.Count();
+                var page = request.Page;
+                var pageSize = request.PageSize;
+
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                if (totalPages == 0)
+                    totalPages = 1;
+
+                if (page > totalPages)
+                    page = totalPages;
+
+                var users = query
+                    .OrderByDescending(x => x.CreatedDate)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                foreach (var user in users)
+                {
+                    response.Users.Add(new AdminUserListModel
+                    {
+                        UserId = user.Id,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        Phone = user.Phone,
+                        RoleId = (long)user.RoleId,
+                        EmailConfirmed = user.EmailConfirmed,
+                        Status = user.Status,
+                        CreatedDate = user.CreatedDate,
+                        ModifiedDate = user.ModifiedDate,
+                        DeletedDate = user.DeletedDate
+                    });
+                }
+
+                response.Page = page;
+                response.PageSize = pageSize;
+                response.TotalCount = totalCount;
+                response.TotalPages = totalPages;
+                response.Code = "200";
+                response.Message = "Kullanıcılar listelendi.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public AdminGetUserByIdResponse AdminGetUserById(AdminGetUserByIdRequest request)
+        {
+            var response = new AdminGetUserByIdResponse();
+
+            try
+            {
+                var validator = new AdminGetUserByIdValidator();
+                var result = validator.Validate(request);
+
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Message = "Doğrulama hatası";
+                    return response;
+                }
+
+                var user = _userRepository.Get(x => x.Id == request.TargetUserId);
+                if (user == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Kullanıcı bulunamadı.");
+                    return response;
+                }
+
+                response.User = new AdminUserDetailModel
+                {
+                    UserId = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    RoleId = (long)user.RoleId,
+                    EmailConfirmed = user.EmailConfirmed,
+                    Status = user.Status,
+                    Ip = user.Ip,
+                    CreatedDate = user.CreatedDate,
+                    ModifiedDate = user.ModifiedDate,
+                    DeletedDate = user.DeletedDate
+                };
+
+                response.Code = "200";
+                response.Message = "Kullanıcı detayı getirildi.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
+
+        public AdminDeleteUserResponse AdminDeleteUser(AdminDeleteUserRequest request)
+        {
+            var response = new AdminDeleteUserResponse();
+
+            try
+            {
+                var validator = new AdminDeleteUserValidator();
+                var result = validator.Validate(request);
+
+                if (!result.IsValid)
+                {
+                    foreach (var err in result.Errors)
+                        response.Errors.Add(err.ErrorMessage);
+
+                    response.Code = "400";
+                    response.Message = "Doğrulama hatası";
+                    return response;
+                }
+
+                var user = _userRepository.Get(x => x.Id == request.TargetUserId);
+                if (user == null)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Kullanıcı bulunamadı.");
+                    return response;
+                }
+
+                if ((long)user.RoleId == (long)Role.Admin)
+                {
+                    response.Code = "400";
+                    response.Errors.Add("Admin kullanıcı pasife çekilemez.");
+                    return response;
+                }
+
+                if (!user.Status)
+                {
+                    response.Code = "200";
+                    response.Message = "Kullanıcı zaten pasif.";
+                    response.DeletedUserId = user.Id;
+                    return response;
+                }
+
+                var now = DateTime.UtcNow;
+
+                var sessions = _userSessionRepository.GetList(x =>
+                    x.UserId == user.Id &&
+                    x.Status == true &&
+                    x.IsActive == true);
+
+                foreach (var session in sessions)
+                {
+                    session.IsActive = false;
+                    session.ExpireAt = now;
+                    session.ModifiedDate = now;
+                    _userSessionRepository.Update(session);
+                }
+
+                user.Status = false;
+                user.DeletedDate = now;
+                user.ModifiedDate = now;
+                _userRepository.Update(user);
+
+                response.DeletedUserId = user.Id;
+                response.Code = "200";
+                response.Message = "Kullanıcı pasife çekildi.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Code = "400";
+                response.Errors.Add(ex.Message);
+                return response;
+            }
+        }
 
 
         private bool VerifyPassword(string password, string passwordHash)

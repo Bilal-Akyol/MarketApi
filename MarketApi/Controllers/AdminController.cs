@@ -494,7 +494,88 @@ namespace MarketApi.Controllers
 
             return _adminService.DeleteContact(request);
         }
+        [SwaggerOperation(Summary = "Kullanıcıları listele")]
+        [HttpPost]
+        [Route("GetAllUsers")]
+        public AdminGetAllUsersResponse AdminGetAllUsers(AdminGetAllUsersRequest request)
+        {
+            var response = new AdminGetAllUsersResponse();
 
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
+            }
+
+            if (!IsAdmin(roleId))
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            request.UserId = userId;
+            return _adminService.AdminGetAllUsers(request);
+        }
+
+        [SwaggerOperation(Summary = "Kullanıcı detay getir")]
+        [HttpPost]
+        [Route("GetUserById")]
+        public AdminGetUserByIdResponse AdminGetUserById(AdminGetUserByIdRequest request)
+        {
+            var response = new AdminGetUserByIdResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
+            }
+
+            if (!IsAdmin(roleId))
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            request.UserId = userId;
+            return _adminService.AdminGetUserById(request);
+        }
+
+        [SwaggerOperation(Summary = "Kullanıcı pasife çek")]
+        [HttpDelete]
+        [Route("DeleteUser")]
+        public AdminDeleteUserResponse AdminDeleteUser(long targetUserId)
+        {
+            var response = new AdminDeleteUserResponse();
+
+            if (!TryGetUserInfo(out var userId, out var roleId))
+            {
+                response.Code = "401";
+                response.Message = "Yetkisiz erişim";
+                response.Errors.Add("Token claim bilgileri okunamadı.");
+                return response;
+            }
+
+            if (!IsAdmin(roleId))
+            {
+                response.Code = "400";
+                response.Errors.Add("Bu işlemi yapmaya yetkiniz yok.");
+                return response;
+            }
+
+            var request = new AdminDeleteUserRequest
+            {
+                UserId = userId,
+                TargetUserId = targetUserId
+            };
+
+            return _adminService.AdminDeleteUser(request);
+        }
         private bool TryGetUserInfo(out long userId, out long roleId)
         {
             userId = 0;

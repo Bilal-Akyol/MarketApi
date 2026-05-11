@@ -40,6 +40,9 @@ namespace MarketBusiness.Abstract
         DeleteLogoResponse DeleteLogo(DeleteLogoRequest request);
         UpdateCategoryResponse UpdateCategory(UpdateCategoryRequest request);
         DeleteContactResponse DeleteContact(DeleteContactRequest request);
+        AdminGetAllUsersResponse AdminGetAllUsers(AdminGetAllUsersRequest request);
+        AdminGetUserByIdResponse AdminGetUserById(AdminGetUserByIdRequest request);
+        AdminDeleteUserResponse AdminDeleteUser(AdminDeleteUserRequest request);
 
 
 
